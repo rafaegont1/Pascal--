@@ -14,7 +14,7 @@ public:
 	enum TokenType find(const std::string& token) const;
 
 private:
-	static const std::unordered_map<std::string, enum TokenType> m_symbols;
+	static const std::unordered_map<std::string, enum TokenType> ms_symbols;
 };
 
 #endif // SYMBOL_TABLE_HPP

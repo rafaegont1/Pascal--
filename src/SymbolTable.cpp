@@ -1,6 +1,6 @@
 #include "SymbolTable.hpp"
 
-const std::unordered_map<std::string, enum TokenType> SymbolTable::m_symbols = {
+const std::unordered_map<std::string, enum TokenType> SymbolTable::ms_symbols = {
     // Arithmetic operators
     {"+", TT_ADD},
     {"-", TT_SUB},
@@ -60,10 +60,10 @@ SymbolTable::~SymbolTable() {
 }
 
 bool SymbolTable::contains(const std::string& token) const {
-	return m_symbols.find(token) != m_symbols.end();
+	return ms_symbols.find(token) != ms_symbols.end();
 }
 
 enum TokenType SymbolTable::find(const std::string& token) const {
-    auto it = m_symbols.find(token);
-    return (it != m_symbols.end()) ? it->second : TT_VAR_NAME;
+    auto it = ms_symbols.find(token);
+    return (it != ms_symbols.end()) ? it->second : TT_VAR_NAME;
 }
