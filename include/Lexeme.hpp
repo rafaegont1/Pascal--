@@ -5,15 +5,15 @@
 #include "TokenType.hpp"
 
 struct Lexeme {
-	std::string token;
-	enum TokenType type;
-	int line;
-	int column;
+    std::string token;
+    enum TokenType type;
+    int line;
+    int column;
 
-	Lexeme();
-	virtual ~Lexeme();
+    Lexeme();
+    virtual ~Lexeme();
 
-	std::string str() const;
+    std::string str() const;
 };
 
 #endif // LEXEME_HPP

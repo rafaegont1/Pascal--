@@ -7,5 +7,5 @@ Lexeme::~Lexeme() {
 }
 
 std::string Lexeme::str() const {
-	return "(\"" + token + "\", " + tt2str(type) + ")";
+    return "(\"" + token + "\", " + tt2str(type) + ")";
 }

@@ -6,14 +6,14 @@
 
 class SymbolTable {
 public:
-	SymbolTable();
-	virtual ~SymbolTable();
+    SymbolTable();
+    virtual ~SymbolTable();
 
-	bool contains(const std::string& token) const;
-	enum TokenType find(const std::string& token) const;
+    bool contains(const std::string& token) const;
+    enum TokenType find(const std::string& token) const;
 
 private:
-	static const std::unordered_map<std::string, enum TokenType> ms_symbols;
+    static const std::unordered_map<std::string, enum TokenType> ms_symbols;
 };
 
 #endif // SYMBOL_TABLE_HPP

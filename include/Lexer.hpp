@@ -7,20 +7,20 @@
 
 class Lexer {
 public:
-	Lexer(const char* filename);
-	virtual ~Lexer();
+    Lexer(const char* filename);
+    virtual ~Lexer();
 
-	Lexeme nextToken();
-	int line() const { return m_line; }
-	int column() const { return m_column; }
+    Lexeme nextToken();
+    int line() const { return m_line; }
+    int column() const { return m_column; }
 
 private:
-	void newLine();
+    void newLine();
 
-	int m_line;
-	int m_column;
-	SymbolTable m_symbolTable;
-	FILE* m_input;
+    int m_line;
+    int m_column;
+    SymbolTable m_symbolTable;
+    FILE* m_input;
 };
 
 #endif // LEXER_HPP

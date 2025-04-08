@@ -9,7 +9,7 @@ const std::unordered_map<std::string, enum TokenType> SymbolTable::ms_symbols = 
     {"mod", TT_MOD},
     {"div", TT_DIVINT},
 
-	// Logical, relational operators and assignments
+    // Logical, relational operators and assignments
     {"or", TT_OR},
     {"and", TT_AND},
     {"not", TT_NOT},
@@ -60,7 +60,7 @@ SymbolTable::~SymbolTable() {
 }
 
 bool SymbolTable::contains(const std::string& token) const {
-	return ms_symbols.find(token) != ms_symbols.end();
+    return ms_symbols.find(token) != ms_symbols.end();
 }
 
 enum TokenType SymbolTable::find(const std::string& token) const {
