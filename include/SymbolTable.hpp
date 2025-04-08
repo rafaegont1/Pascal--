@@ -10,7 +10,6 @@ public:
 	virtual ~SymbolTable();
 
 	bool contains(const std::string& token) const;
-	enum TokenType find(const std::string& token);
 	enum TokenType find(const std::string& token) const;
 
 private:

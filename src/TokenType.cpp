@@ -60,7 +60,9 @@ std::string tt2str(enum TokenType type) {
 
 		// Others
 		case TT_VAR_NAME:          return "VAR_NAME";
-		case TT_LITERAL_INTEGER:   return "LITERAL_INTEGER";
+		case TT_LITERAL_OCTAL:     return "LITERAL_OCTAL";
+		case TT_LITERAL_DECIMAL:   return "LITERAL_DECIMAL";
+		case TT_LITERAL_HEX:       return "LITERAL_HEX";
 		case TT_LITERAL_REAL:      return "LITERAL_REAL";
 		case TT_LITERAL_STRING:    return "LITERAL_STRING";
 

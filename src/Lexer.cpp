@@ -5,29 +5,22 @@
 #include "TokenType.hpp"
 
 enum State {
-	// Intermediate states
 	STATE_INITIAL,
-	STATE_LINE_COMMENT1,
-	STATE_LINE_COMMENT2,
-	STATE_BLOCK_COMMENT,
-	STATE_LOWER,
-	STATE_GREATER_EQUAL,
+	STATE_SLASH,
+	STATE_COMMENT_LINE,
+	STATE_COMMENT_BLOCK,
+	STATE_LESS_THAN,
+	STATE_GREATER_THAN,
 	STATE_ALNUM,
 	STATE_DIGIT,
 	STATE_REAL,
 	STATE_STRING,
-
-	// All states after this are final
-	STATE_FINAL,
-	STATE_FINAL_POSSIBLE_KEYWORD,
-
-	// Final states
-	// STATE_WORD_FINAL,
-	// STATE_LINE_COMMENT_FINAL,
-	// STATE_BLOCK_COMMENT_FINAL,
-	// STATE_INTEGER_FINAL,
-	// STATE_REAL_FINAL,
-	// STATE_STRING_FINAL,
+	STATE_ZERO,
+	STATE_OCTAL,
+	STATE_HEX,
+	STATE_ASSIGN,
+	STATE_EQUAL,
+	STATE_FINAL
 };
 
 Lexer::Lexer(const char* filename) : m_line(1), m_column(1) {
@@ -44,43 +37,69 @@ Lexer::~Lexer() {
 }
 
 Lexeme Lexer::nextToken() {
-	State state;
+	State state = STATE_INITIAL;
 	Lexeme lexeme;
 
-	state = STATE_INITIAL;
+	lexeme.line = m_line;
+	lexeme.column = m_column;
 
-	while (state < STATE_FINAL) {
+	while (state != STATE_FINAL) {
 		int c = fgetc(m_input);
 
 		std::cout << "[" << state << ", " << c
-		          << " ('" << (char) c << "')]" << std::endl;
+		    << " ('" << (char) c << "')]" << std::endl;
 
 		switch (state) {
 			case STATE_INITIAL:
 				if (c == ' ' || c == '\t' || c == '\r') {
 					state = STATE_INITIAL;
-				} else if (c == '\n') {
-					m_line++;
-					m_column = 1;
-					state = STATE_INITIAL;
-				} else if (c == '/') {
-					state = STATE_LINE_COMMENT1;
-				} else if (c == '{') {
-					state = STATE_BLOCK_COMMENT;
-				} else if (c == '<') {
-					lexeme.token += (char)c;
-					state = STATE_LOWER;
-				} else if (c == '>' || c == '=') {
-					lexeme.token += (char)c;
-					state = STATE_GREATER_EQUAL;
-				} else if (c == '_' || isalpha(c)) {
+
+				} else if (isalpha(c)) {
 					lexeme.token += (char)c;
 					state = STATE_ALNUM;
+
 				} else if (isdigit(c)) {
 					lexeme.token += (char)c;
 					state = STATE_DIGIT;
+
+				} else if (c == '\n') {
+					newLine();
+					state = STATE_INITIAL;
+
+				} else if (c == '+' || c == '-' || c == '*' || c == ';' || c == ','
+				|| c == '.' || c == ':' || c == '(' || c == ')') {
+					lexeme.token += (char)c;
+					lexeme.type = m_symbolTable.find(lexeme.token);
+					state = STATE_FINAL;
+
+				} else if (c == '/') {
+					lexeme.token += (char)c;
+					state = STATE_SLASH;
+
+				} else if (c == '{') {
+					state = STATE_COMMENT_BLOCK;
+
+				} else if (c == ':') {
+					state = STATE_ASSIGN;
+
+				} else if (c == '<') {
+					lexeme.token += (char)c;
+					state = STATE_LESS_THAN;
+
+				} else if (c == '>') {
+					lexeme.token += (char)c;
+					state = STATE_GREATER_THAN;
+
+				} else if (c == '=') {
+					lexeme.token += (char)c;
+					state = STATE_EQUAL;
+
 				} else if (c == '\"') {
 					state = STATE_STRING;
+
+				} else if (c == '0') {
+					state = STATE_ZERO;
+
 				} else {
 					if (c == EOF) {
 						lexeme.type = TT_END_OF_FILE;
@@ -93,58 +112,105 @@ Lexeme Lexer::nextToken() {
 				}
 				break;
 
-			case STATE_LINE_COMMENT1:
+			case STATE_SLASH:
 				if (c == '/') {
-					state = STATE_LINE_COMMENT2;
-				} else {
-					lexeme.token += (char)c;
-					lexeme.type = TT_INVALID_TOKEN;
-					state = STATE_FINAL;
-				}
-				break;
-
-			case STATE_LINE_COMMENT2:
-				if (c == '\n' || c == EOF) {
-					lexeme.token = TT_TYPE_STRING;
-					state = STATE_FINAL;
-				} else {
-					lexeme.token += (char)c;
-					state = STATE_LINE_COMMENT2;
-				}
-				break;
-
-			case STATE_LOWER:
-				if (c == '=' || c == '>') {
-					lexeme.token += (char)c;
-					state = STATE_FINAL_POSSIBLE_KEYWORD;
+					lexeme.token.pop_back();
+					state = STATE_COMMENT_LINE;
 				} else {
 					if (c != EOF) {
 						ungetc(c, m_input);
 					}
+					lexeme.type = TT_DIV;
 					state = STATE_FINAL;
 				}
 				break;
 
-			case STATE_GREATER_EQUAL:
+			case STATE_COMMENT_LINE:
+				if (c == '\n') {
+					newLine();
+					state = STATE_INITIAL;
+				} else if (c == EOF) {
+					lexeme.type = TT_END_OF_FILE;
+					state = STATE_FINAL;
+				} else {
+					state = STATE_COMMENT_LINE;
+				}
+				break;
+
+			case STATE_LESS_THAN:
 				if (c == '=') {
 					lexeme.token += (char)c;
-					state = STATE_FINAL_POSSIBLE_KEYWORD;
+					lexeme.type = TT_LOWER_EQUAL;
+					state = STATE_FINAL;
+				} else if (c == '>') {
+					lexeme.token += (char)c;
+					lexeme.type = TT_DIFFERENCE;
+					state = STATE_FINAL;
 				} else {
 					if (c != EOF) {
 						ungetc(c, m_input);
 					}
+					lexeme.type = TT_LOWER;
+					state = STATE_FINAL;
+				}
+				break;
+
+			case STATE_GREATER_THAN:
+				if (c == '=') {
+					lexeme.token += (char)c;
+					lexeme.type = TT_GREATER_EQUAL;
+					state = STATE_FINAL;
+				} else {
+					if (c != EOF) {
+						ungetc(c, m_input);
+					}
+					lexeme.type = TT_GREATER;
 					state = STATE_FINAL;
 				}
 				break;
 
 			case STATE_ALNUM:
-				if (c == '_' || isalnum(c)) {
+				if (isalnum(c)) {
 					lexeme.token += (char)c;
 					state = STATE_ALNUM;
 				} else {
 					if (c != EOF) {
 						ungetc(c, m_input);
 					}
+					lexeme.type = m_symbolTable.find(lexeme.token);
+					state = STATE_FINAL;
+				}
+				break;
+
+			case STATE_ZERO:
+				if (isdigit(c)) {
+					state = STATE_OCTAL;
+					lexeme.token += (char)c;
+				} else if (c == 'x') {
+					state = STATE_HEX;
+				}
+				break;
+
+			case STATE_OCTAL:
+				if (isdigit(c)) {
+					lexeme.token += (char)c;
+				} else {
+					if (c != EOF) {
+						ungetc(c, m_input);
+					}
+					lexeme.type = TT_LITERAL_OCTAL;
+					state = STATE_FINAL;
+				}
+				break;
+
+			case STATE_HEX:
+				if (isdigit(c)) {
+					lexeme.token += (char)c;
+				} else {
+					if (c != EOF) {
+						ungetc(c, m_input);
+					}
+					lexeme.type = TT_LITERAL_HEX;
 					state = STATE_FINAL;
 				}
 				break;
@@ -160,7 +226,7 @@ Lexeme Lexer::nextToken() {
 					if (c != EOF) {
 						ungetc(c, m_input);
 					}
-					lexeme.type = TT_TYPE_INTEGER;
+					lexeme.type = TT_LITERAL_DECIMAL;
 					state = STATE_FINAL;
 				}
 				break;
@@ -173,13 +239,16 @@ Lexeme Lexer::nextToken() {
 					if (c != EOF) {
 						ungetc(c, m_input);
 					}
-					lexeme.type = TT_TYPE_REAL;
+					lexeme.type = TT_LITERAL_REAL;
 					state = STATE_FINAL;
 				}
 				break;
 
 			case STATE_STRING:
-				if (c != '\"') {
+				if (c == '\n') {
+					lexeme.type = TT_INVALID_TOKEN;
+					state = STATE_FINAL;
+				} else if (c != '\"') {
 					lexeme.token += (char)c;
 				} else {
 					lexeme.type = TT_LITERAL_STRING;
@@ -187,12 +256,35 @@ Lexeme Lexer::nextToken() {
 				}
 				break;
 
-			case STATE_BLOCK_COMMENT:
+			case STATE_COMMENT_BLOCK:
 				if (c == '}') {
-					lexeme.token = TT_TYPE_STRING;
-					state = STATE_FINAL;
+					state = STATE_INITIAL;
 				} else if (c == EOF) {
 					lexeme.type = TT_UNEXPECTED_EOF;
+					state = STATE_FINAL;
+				} else {
+					state = STATE_COMMENT_BLOCK;
+				}
+				break;
+
+			case STATE_ASSIGN:
+				if (c == '=') {
+					lexeme.token += (char)c;
+					lexeme.type = TT_ASSIGN;
+					state = STATE_FINAL;
+				} else {
+					lexeme.type = TT_INVALID_TOKEN;
+					state = STATE_FINAL;
+				}
+				break;
+
+			case STATE_EQUAL:
+				if (c == '=') {
+					lexeme.token += (char)c;
+					lexeme.type = TT_EQUAL;
+					state = STATE_FINAL;
+				} else {
+					lexeme.type = TT_INVALID_TOKEN;
 					state = STATE_FINAL;
 				}
 				break;
@@ -204,9 +296,10 @@ Lexeme Lexer::nextToken() {
 		m_column++;
 	}
 
-	if (state == STATE_FINAL_POSSIBLE_KEYWORD) {
-		lexeme.type = m_st.find(lexeme.token);
-	}
-
 	return lexeme;
+}
+
+void Lexer::newLine() {
+	m_line += 1;
+	m_column = 1;
 }

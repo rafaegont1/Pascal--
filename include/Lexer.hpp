@@ -15,9 +15,11 @@ public:
 	int column() const { return m_column; }
 
 private:
+	void newLine();
+
 	int m_line;
 	int m_column;
-	SymbolTable m_st;
+	SymbolTable m_symbolTable;
 	FILE* m_input;
 };
 

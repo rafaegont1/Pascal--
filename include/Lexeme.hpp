@@ -7,6 +7,8 @@
 struct Lexeme {
 	std::string token;
 	enum TokenType type;
+	int line;
+	int column;
 
 	Lexeme();
 	virtual ~Lexeme();
