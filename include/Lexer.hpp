@@ -15,7 +15,8 @@ public:
     int column() const { return m_column; }
 
 private:
-    void newLine();
+    void newLine(Lexeme& lexeme);
+    void rollbackFile(int c);
 
     int m_line;
     int m_column;

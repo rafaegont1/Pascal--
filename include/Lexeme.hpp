@@ -13,6 +13,7 @@ struct Lexeme {
     Lexeme();
     virtual ~Lexeme();
 
+    void setPosition(int line, int column);
     std::string str() const;
 };
 

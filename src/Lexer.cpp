@@ -40,18 +40,21 @@ Lexeme Lexer::nextToken() {
     State state = STATE_INITIAL;
     Lexeme lexeme;
 
-    lexeme.line = m_line;
-    lexeme.column = m_column;
+    lexeme.setPosition(m_line, m_column);
 
     while (state != STATE_FINAL) {
         int c = fgetc(m_input);
 
-        std::cout << "[" << state << ", " << c
-            << " ('" << (char) c << "')]" << std::endl;
+        // std::cout << ((char)c != '\n' ? (char)c : '|') << ' ' << std::to_string(m_line) << ' ' << std::to_string(m_column) << std::endl; // rascunho
 
         switch (state) {
             case STATE_INITIAL:
                 if (c == ' ' || c == '\t' || c == '\r') {
+                    lexeme.column++;
+                    state = STATE_INITIAL;
+
+                } else if (c == '\n') {
+                    newLine(lexeme);
                     state = STATE_INITIAL;
 
                 } else if (isalpha(c)) {
@@ -61,10 +64,6 @@ Lexeme Lexer::nextToken() {
                 } else if (isdigit(c)) {
                     lexeme.token += (char)c;
                     state = STATE_DIGIT;
-
-                } else if (c == '\n') {
-                    newLine();
-                    state = STATE_INITIAL;
 
                 } else if (c == '+' || c == '-' || c == '*' || c == ';' || c == ','
                 || c == '.' || c == ':' || c == '(' || c == ')') {
@@ -117,9 +116,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.token.pop_back();
                     state = STATE_COMMENT_LINE;
                 } else {
-                    if (c != EOF) {
-                        ungetc(c, m_input);
-                    }
+                    rollbackFile(c);
                     lexeme.type = TT_DIV;
                     state = STATE_FINAL;
                 }
@@ -127,7 +124,7 @@ Lexeme Lexer::nextToken() {
 
             case STATE_COMMENT_LINE:
                 if (c == '\n') {
-                    newLine();
+                    newLine(lexeme);
                     state = STATE_INITIAL;
                 } else if (c == EOF) {
                     lexeme.type = TT_END_OF_FILE;
@@ -147,9 +144,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.type = TT_DIFFERENCE;
                     state = STATE_FINAL;
                 } else {
-                    if (c != EOF) {
-                        ungetc(c, m_input);
-                    }
+                    rollbackFile(c);
                     lexeme.type = TT_LOWER;
                     state = STATE_FINAL;
                 }
@@ -161,9 +156,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.type = TT_GREATER_EQUAL;
                     state = STATE_FINAL;
                 } else {
-                    if (c != EOF) {
-                        ungetc(c, m_input);
-                    }
+                    rollbackFile(c);
                     lexeme.type = TT_GREATER;
                     state = STATE_FINAL;
                 }
@@ -174,9 +167,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.token += (char)c;
                     state = STATE_ALNUM;
                 } else {
-                    if (c != EOF) {
-                        ungetc(c, m_input);
-                    }
+                    rollbackFile(c);
                     lexeme.type = m_symbolTable.find(lexeme.token);
                     state = STATE_FINAL;
                 }
@@ -195,9 +186,7 @@ Lexeme Lexer::nextToken() {
                 if (isdigit(c)) {
                     lexeme.token += (char)c;
                 } else {
-                    if (c != EOF) {
-                        ungetc(c, m_input);
-                    }
+                    rollbackFile(c);
                     lexeme.type = TT_LITERAL_OCTAL;
                     state = STATE_FINAL;
                 }
@@ -207,9 +196,7 @@ Lexeme Lexer::nextToken() {
                 if (isdigit(c)) {
                     lexeme.token += (char)c;
                 } else {
-                    if (c != EOF) {
-                        ungetc(c, m_input);
-                    }
+                    rollbackFile(c);
                     lexeme.type = TT_LITERAL_HEX;
                     state = STATE_FINAL;
                 }
@@ -223,9 +210,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.token += (char)c;
                     state = STATE_REAL;
                 } else {
-                    if (c != EOF) {
-                        ungetc(c, m_input);
-                    }
+                    rollbackFile(c);
                     lexeme.type = TT_LITERAL_DECIMAL;
                     state = STATE_FINAL;
                 }
@@ -236,9 +221,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.token += (char)c;
                     state = STATE_REAL;
                 } else {
-                    if (c != EOF) {
-                        ungetc(c, m_input);
-                    }
+                    rollbackFile(c);
                     lexeme.type = TT_LITERAL_REAL;
                     state = STATE_FINAL;
                 }
@@ -299,7 +282,17 @@ Lexeme Lexer::nextToken() {
     return lexeme;
 }
 
-void Lexer::newLine() {
+// Updates line and column of Lexer and Lexeme when there's a new line '\n'
+void Lexer::newLine(Lexeme& lexeme) {
     m_line += 1;
-    m_column = 1;
+    m_column = 0;
+
+    lexeme.setPosition(m_line, m_column + 1);
+}
+
+void Lexer::rollbackFile(int c) {
+    if (c != EOF) {
+        ungetc(c, m_input);
+    }
+    m_column--;
 }

@@ -17,7 +17,8 @@ int main(int argc, char* argv[]) {
         do {
             lexeme = lexer.nextToken();
             std::cout << "Token: " << lexeme.str()
-                << " | " << tt2str(lexeme.type) << std::endl;
+                << " | line: " << std::to_string(lexeme.line)
+                << " | column: " << std::to_string(lexeme.column) << std::endl;
         } while (lexeme.type != TT_END_OF_FILE);
 
     } catch (const std::string& error) {
