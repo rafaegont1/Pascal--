@@ -62,6 +62,9 @@ Lexeme Lexer::nextToken() {
                     lexeme.token += (char)c;
                     state = STATE_ALNUM;
 
+                } else if (c == '0') {
+                    state = STATE_ZERO;
+
                 } else if (isdigit(c)) {
                     lexeme.token += (char)c;
                     state = STATE_DIGIT;
@@ -96,9 +99,6 @@ Lexeme Lexer::nextToken() {
 
                 } else if (c == '\"') {
                     state = STATE_STRING;
-
-                } else if (c == '0') {
-                    state = STATE_ZERO;
 
                 } else {
                     if (c == EOF) {
