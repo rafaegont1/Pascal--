@@ -16,11 +16,10 @@ public:
 
 private:
     void newLine(Lexeme& lexeme);
-    void rollbackFile(int c);
+    void ungetChar(int c);
 
     int m_line;
     int m_column;
-    SymbolTable m_symbolTable;
     FILE* m_input;
 };
 

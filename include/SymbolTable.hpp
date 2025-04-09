@@ -1,19 +1,13 @@
-#ifndef SYMBOL_TABLE_HPP
-#define SYMBOL_TABLE_HPP
+#ifndef SYMBOLS_HPP
+#define SYMBOLS_HPP
 
-#include <unordered_map>
 #include "TokenType.hpp"
 
-class SymbolTable {
-public:
-    SymbolTable();
-    virtual ~SymbolTable();
+namespace SymbolTable {
 
-    bool contains(const std::string& token) const;
-    enum TokenType find(const std::string& token) const;
+bool contains(const std::string& token);
+enum TokenType find(const std::string& token);
 
-private:
-    static const std::unordered_map<std::string, enum TokenType> ms_symbols;
-};
+} // namespace SymbolTable
 
-#endif // SYMBOL_TABLE_HPP
+#endif // SYMBOLS_HPP

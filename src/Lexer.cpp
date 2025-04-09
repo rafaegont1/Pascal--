@@ -1,7 +1,7 @@
+#include "Lexer.hpp"
+
 #include <iostream>
 #include <string>
-#include <cctype>
-#include "Lexer.hpp"
 #include "TokenType.hpp"
 
 enum State {
@@ -23,7 +23,7 @@ enum State {
     STATE_FINAL
 };
 
-Lexer::Lexer(const char* filename) : m_line(1), m_column(1) {
+Lexer::Lexer(const char* filename) : m_line{1}, m_column{1} {
     m_input = fopen(filename, "r");
     if (!m_input) {
         throw std::string("Unable to open file");
@@ -40,7 +40,8 @@ Lexeme Lexer::nextToken() {
     State state = STATE_INITIAL;
     Lexeme lexeme;
 
-    lexeme.setPosition(m_line, m_column);
+    lexeme.line = m_line;
+    lexeme.column = m_column;
 
     while (state != STATE_FINAL) {
         int c = fgetc(m_input);
@@ -68,7 +69,7 @@ Lexeme Lexer::nextToken() {
                 } else if (c == '+' || c == '-' || c == '*' || c == ';' || c == ','
                 || c == '.' || c == ':' || c == '(' || c == ')') {
                     lexeme.token += (char)c;
-                    lexeme.type = m_symbolTable.find(lexeme.token);
+                    lexeme.type = SymbolTable::find(lexeme.token);
                     state = STATE_FINAL;
 
                 } else if (c == '/') {
@@ -116,7 +117,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.token.pop_back();
                     state = STATE_COMMENT_LINE;
                 } else {
-                    rollbackFile(c);
+                    ungetChar(c);
                     lexeme.type = TT_DIV;
                     state = STATE_FINAL;
                 }
@@ -144,7 +145,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.type = TT_DIFFERENCE;
                     state = STATE_FINAL;
                 } else {
-                    rollbackFile(c);
+                    ungetChar(c);
                     lexeme.type = TT_LOWER;
                     state = STATE_FINAL;
                 }
@@ -156,7 +157,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.type = TT_GREATER_EQUAL;
                     state = STATE_FINAL;
                 } else {
-                    rollbackFile(c);
+                    ungetChar(c);
                     lexeme.type = TT_GREATER;
                     state = STATE_FINAL;
                 }
@@ -167,8 +168,8 @@ Lexeme Lexer::nextToken() {
                     lexeme.token += (char)c;
                     state = STATE_ALNUM;
                 } else {
-                    rollbackFile(c);
-                    lexeme.type = m_symbolTable.find(lexeme.token);
+                    ungetChar(c);
+                    lexeme.type = SymbolTable::find(lexeme.token);
                     state = STATE_FINAL;
                 }
                 break;
@@ -186,7 +187,7 @@ Lexeme Lexer::nextToken() {
                 if (isdigit(c)) {
                     lexeme.token += (char)c;
                 } else {
-                    rollbackFile(c);
+                    ungetChar(c);
                     lexeme.type = TT_LITERAL_OCTAL;
                     state = STATE_FINAL;
                 }
@@ -196,7 +197,7 @@ Lexeme Lexer::nextToken() {
                 if (isdigit(c)) {
                     lexeme.token += (char)c;
                 } else {
-                    rollbackFile(c);
+                    ungetChar(c);
                     lexeme.type = TT_LITERAL_HEX;
                     state = STATE_FINAL;
                 }
@@ -210,7 +211,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.token += (char)c;
                     state = STATE_REAL;
                 } else {
-                    rollbackFile(c);
+                    ungetChar(c);
                     lexeme.type = TT_LITERAL_DECIMAL;
                     state = STATE_FINAL;
                 }
@@ -221,7 +222,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.token += (char)c;
                     state = STATE_REAL;
                 } else {
-                    rollbackFile(c);
+                    ungetChar(c);
                     lexeme.type = TT_LITERAL_REAL;
                     state = STATE_FINAL;
                 }
@@ -287,10 +288,11 @@ void Lexer::newLine(Lexeme& lexeme) {
     m_line += 1;
     m_column = 0;
 
-    lexeme.setPosition(m_line, m_column + 1);
+    lexeme.line = m_line;
+    lexeme.column = m_column + 1;
 }
 
-void Lexer::rollbackFile(int c) {
+void Lexer::ungetChar(int c) {
     if (c != EOF) {
         ungetc(c, m_input);
     }
