@@ -1,4 +1,4 @@
-#include "SymbolTable.hpp"
+#include "pascal--/lexical/SymbolTable.hpp"
 
 #include <unordered_map>
 

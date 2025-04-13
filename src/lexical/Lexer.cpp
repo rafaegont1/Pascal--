@@ -1,8 +1,8 @@
-#include "Lexer.hpp"
+#include "pascal--/lexical/Lexer.hpp"
 
 #include <iostream>
 #include <string>
-#include "TokenType.hpp"
+#include "pascal--/lexical/TokenType.hpp"
 
 enum State {
     STATE_INITIAL,
@@ -176,8 +176,8 @@ Lexeme Lexer::nextToken() {
 
             case STATE_ZERO:
                 if (isdigit(c)) {
-                    state = STATE_OCTAL;
                     lexeme.token += (char)c;
+                    state = STATE_OCTAL;
                 } else if (c == 'x') {
                     state = STATE_HEX;
                 }

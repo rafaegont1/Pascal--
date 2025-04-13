@@ -2,8 +2,8 @@
 #define LEXER_HPP
 
 #include <cstdio>
-#include "Lexeme.hpp"
-#include "SymbolTable.hpp"
+#include "pascal--/lexical/Lexeme.hpp"
+#include "pascal--/lexical/SymbolTable.hpp"
 
 class Lexer {
 public:

@@ -49,7 +49,7 @@ enum TokenType {
     TT_WRITE,              // write
     TT_WRITELN,            // writeln
     TT_READ,               // read
-    TT_READLN,             // read
+    TT_READLN,             // readln
 
     // Symbols
     TT_SEMICOLON,          // ;

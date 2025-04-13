@@ -11,7 +11,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 
 # Set source files
-file(GLOB SOURCES "src/*.cpp")
+set(SOURCES
+    src/lexical/Lexeme.cpp
+    src/lexical/TokenType.cpp
+    src/lexical/SymbolTable.cpp
+    src/lexical/Lexer.cpp
+    src/main.cpp
+)
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})

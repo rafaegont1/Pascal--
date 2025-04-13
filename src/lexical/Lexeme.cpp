@@ -1,4 +1,4 @@
-#include "Lexeme.hpp"
+#include "pascal--/lexical/Lexeme.hpp"
 
 Lexeme::Lexeme() : token{""}, type{TT_END_OF_FILE} {
 }

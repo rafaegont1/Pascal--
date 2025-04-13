@@ -2,7 +2,7 @@
 #define LEXEME_HPP
 
 #include <string>
-#include "TokenType.hpp"
+#include "pascal--/lexical/TokenType.hpp"
 
 struct Lexeme {
     std::string token;
