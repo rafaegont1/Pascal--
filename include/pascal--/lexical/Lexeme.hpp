@@ -18,7 +18,7 @@ struct Lexeme {
      *  @brief Constructs an empty Lexeme with default values.
      */
     Lexeme();
-    
+
     /**
      *  @brief Virtual destructor to allow for inheritance.
      */
