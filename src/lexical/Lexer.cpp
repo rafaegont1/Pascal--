@@ -46,8 +46,6 @@ Lexeme Lexer::nextToken() {
     while (state != STATE_FINAL) {
         int c = fgetc(m_input);
 
-        // std::cout << ((char)c != '\n' ? (char)c : '|') << ' ' << std::to_string(m_line) << ' ' << std::to_string(m_column) << std::endl; // rascunho
-
         switch (state) {
             case STATE_INITIAL:
                 if (c == ' ' || c == '\t' || c == '\r') {
@@ -295,7 +293,6 @@ Lexeme Lexer::nextToken() {
     return lexeme;
 }
 
-// Updates line and column of Lexer and Lexeme when there's a new line '\n'
 void Lexer::newLine(Lexeme& lexeme) {
     m_line += 1;
     m_column = 0;
