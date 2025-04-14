@@ -18,7 +18,7 @@ enum State {
     STATE_ZERO,
     STATE_OCTAL,
     STATE_HEX,
-    STATE_ASSIGN,
+    STATE_COLON,
     STATE_EQUAL,
     STATE_FINAL
 };
@@ -83,7 +83,7 @@ Lexeme Lexer::nextToken() {
                     state = STATE_COMMENT_BLOCK;
 
                 } else if (c == ':') {
-                    state = STATE_ASSIGN;
+                    state = STATE_COLON;
 
                 } else if (c == '<') {
                     lexeme.token += (char)c;
@@ -232,8 +232,19 @@ Lexeme Lexer::nextToken() {
                 if (c == '\n') {
                     lexeme.type = TT_INVALID_TOKEN;
                     state = STATE_FINAL;
+                } else if (lexeme.token.back() == '\\') {
+                    switch (c) {
+                        case 'n':  lexeme.token.back() = '\n'; break;
+                        case 't':  lexeme.token.back() = '\t'; break;
+                        case 'r':  lexeme.token.back() = '\r'; break;
+                        case '\\': lexeme.token.back() = '\\'; break;
+                        case '\"': lexeme.token.back() = '\"'; break;
+                        default:   lexeme.type = TT_INVALID_TOKEN; break;
+                    }
+                    state = STATE_STRING;
                 } else if (c != '\"') {
                     lexeme.token += (char)c;
+                    state = STATE_STRING;
                 } else {
                     lexeme.type = TT_LITERAL_STRING;
                     state = STATE_FINAL;
@@ -251,13 +262,14 @@ Lexeme Lexer::nextToken() {
                 }
                 break;
 
-            case STATE_ASSIGN:
+            case STATE_COLON:
                 if (c == '=') {
                     lexeme.token += (char)c;
                     lexeme.type = TT_ASSIGN;
                     state = STATE_FINAL;
                 } else {
-                    lexeme.type = TT_INVALID_TOKEN;
+                    ungetChar(c);
+                    lexeme.type = TT_COLON;
                     state = STATE_FINAL;
                 }
                 break;
