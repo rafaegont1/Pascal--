@@ -17,6 +17,7 @@ static const std::unordered_map<std::string, enum TokenType> s_symbols = {
     {"or", TT_OR},
     {"and", TT_AND},
     {"not", TT_NOT},
+    {"=", TT_EQUAL},
     {"==", TT_EQUAL},
     {"<>", TT_DIFFERENCE},
     {">", TT_GREATER},

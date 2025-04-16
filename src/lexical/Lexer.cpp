@@ -63,12 +63,14 @@ Lexeme Lexer::nextToken() {
                 } else if (c == '0') {
                     state = STATE_ZERO;
 
-                } else if (isdigit(c)) {
+                } else if ('1' <= c && c <= '9') {
                     lexeme.token += (char)c;
                     state = STATE_DIGIT;
 
-                } else if (c == '+' || c == '-' || c == '*' || c == ';' || c == ','
-                || c == '.' || c == ':' || c == '(' || c == ')') {
+                } else if (
+                    c == '+' || c == '-' || c == '*' || c == ';' || c == ',' ||
+                    c == '.' || c == '(' || c == ')'
+                ) {
                     lexeme.token += (char)c;
                     lexeme.type = SymbolTable::find(lexeme.token);
                     state = STATE_FINAL;
@@ -182,8 +184,12 @@ Lexeme Lexer::nextToken() {
                 break;
 
             case STATE_OCTAL:
-                if (isdigit(c)) {
+                if ('0' <= c && c <= '7') {
                     lexeme.token += (char)c;
+                } else if (isalpha(c)) {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_INVALID_TOKEN;
+                    state = STATE_FINAL;
                 } else {
                     ungetChar(c);
                     lexeme.type = TT_LITERAL_OCTAL;
@@ -192,8 +198,12 @@ Lexeme Lexer::nextToken() {
                 break;
 
             case STATE_HEX:
-                if (isdigit(c)) {
+                if (isdigit(c) || ('A' <= c && c <= 'F')) {
                     lexeme.token += (char)c;
+                } else if (isalpha(c)) {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_INVALID_TOKEN;
+                    state = STATE_FINAL;
                 } else {
                     ungetChar(c);
                     lexeme.type = TT_LITERAL_HEX;
@@ -208,6 +218,10 @@ Lexeme Lexer::nextToken() {
                 } else if (c == '.') {
                     lexeme.token += (char)c;
                     state = STATE_REAL;
+                } else if (isalpha(c)) {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_INVALID_TOKEN;
+                    state = STATE_FINAL;
                 } else {
                     ungetChar(c);
                     lexeme.type = TT_LITERAL_DECIMAL;
@@ -219,6 +233,10 @@ Lexeme Lexer::nextToken() {
                 if (isdigit(c)) {
                     lexeme.token += (char)c;
                     state = STATE_REAL;
+                } else if (isalpha(c)) {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_INVALID_TOKEN;
+                    state = STATE_FINAL;
                 } else {
                     ungetChar(c);
                     lexeme.type = TT_LITERAL_REAL;
@@ -228,6 +246,7 @@ Lexeme Lexer::nextToken() {
 
             case STATE_STRING:
                 if (c == '\n') {
+                    // lexeme.token += (char)c; // TODO: será que eu coloco o '\n' aqui? ele vai dar quebra de linha no print
                     lexeme.type = TT_INVALID_TOKEN;
                     state = STATE_FINAL;
                 } else if (lexeme.token.back() == '\\') {
@@ -278,7 +297,7 @@ Lexeme Lexer::nextToken() {
                     lexeme.type = TT_EQUAL;
                     state = STATE_FINAL;
                 } else {
-                    lexeme.type = TT_INVALID_TOKEN;
+                    lexeme.type = TT_EQUAL;
                     state = STATE_FINAL;
                 }
                 break;
