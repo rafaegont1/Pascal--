@@ -30,14 +30,6 @@ Lexer::Lexer() {
 Lexer::~Lexer() {
 }
 
-bool static inline isOctal(char c) {
-    return ('0' <= c && c <= '7');
-}
-
-bool static inline isHex(char c) {
-    return (std::isdigit(c) || ('A' <= c && c <= 'F'));
-}
-
 const std::vector<Lexeme>& Lexer::scanFile(const char* filename) {
     m_file.open(filename);
 
@@ -51,6 +43,14 @@ const std::vector<Lexeme>& Lexer::scanFile(const char* filename) {
     m_file.close();
 
     return m_lexemes;
+}
+
+bool static inline isOctal(char c) {
+    return ('0' <= c && c <= '7');
+}
+
+bool static inline isHex(char c) {
+    return (std::isdigit(c) || ('A' <= c && c <= 'F'));
 }
 
 Lexeme Lexer::makeLexeme() {
@@ -439,9 +439,18 @@ Lexeme Lexer::makeLexeme() {
 std::string Lexer::lexicalError(
     const std::string& message, const std::string& token
 ) {
-    return std::string("lexical error -> " + message +
-        "\n\ttoken: " + token +
-        "\n\tline: " + std::to_string(m_file.line()) +
-        "\n\tcolumn: " + std::to_string(m_file.column())
-    );
+    std::string error;
+
+    error.reserve(128);
+
+    error.append("lexical error -> ")
+         .append(message)
+         .append("\n\ttoken: ")
+         .append(token)
+         .append("\n\tline: ")
+         .append(std::to_string(m_file.line()))
+         .append("\n\tcolumn: ")
+         .append(std::to_string(m_file.column()));
+
+    return error;
 }
