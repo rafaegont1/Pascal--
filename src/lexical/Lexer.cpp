@@ -7,20 +7,20 @@
 
 enum State {
     STATE_INITIAL,
-    STATE_COMMENT_SINGLE_LINE,
-    STATE_COMMENT_MULTI_LINE,
     STATE_ALNUM,
     STATE_ZERO,
+    STATE_OCTAL,
+    STATE_HEX,
+    STATE_DIGIT,
+    STATE_REAL,
     STATE_SLASH,
+    STATE_COMMENT_SINGLE_LINE,
+    STATE_COMMENT_MULTI_LINE,
     STATE_COLON,
     STATE_LESS_THAN,
     STATE_GREATER_THAN,
     STATE_EQUAL,
-    STATE_DIGIT,
-    STATE_REAL,
     STATE_STRING,
-    STATE_OCTAL,
-    STATE_HEX,
     STATE_FINAL
 };
 
@@ -61,10 +61,12 @@ Lexeme Lexer::makeLexeme() {
     while (state != STATE_FINAL) {
         switch (state) {
             case STATE_INITIAL:
+                // whitespaces are skipped
                 if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
                     c = m_file.advance();
                     state = STATE_INITIAL;
 
+                // this can be either a variable name or a keyword
                 } else if (std::isalpha(c)) {
                     lexeme.token += (char)c;
                     lexeme.line = m_file.line();
@@ -72,6 +74,7 @@ Lexeme Lexer::makeLexeme() {
                     c = m_file.advance();
                     state = STATE_ALNUM;
 
+                // this can be a octal, hexadecimal or a real number
                 } else if (c == '0') {
                     lexeme.token += (char)c;
                     lexeme.line = m_file.line();
@@ -79,12 +82,15 @@ Lexeme Lexer::makeLexeme() {
                     c = m_file.advance();
                     state = STATE_ZERO;
 
+                // this can be either a decimal or real number
                 } else if ('1' <= c && c <= '9') {
                     lexeme.token += (char)c;
                     lexeme.line = m_file.line();
                     lexeme.column = m_file.column();
+                    c = m_file.advance();
                     state = STATE_DIGIT;
 
+                // check if 'c' is one of those symbols
                 } else if (
                     c == '+' || c == '-' || c == '*' || c == ';' || c == ',' ||
                     c == '.' || c == '(' || c == ')'
@@ -96,6 +102,7 @@ Lexeme Lexer::makeLexeme() {
                     c = m_file.advance();
                     state = STATE_FINAL;
 
+                // this can be either a division or a single-line comment
                 } else if (c == '/') {
                     lexeme.token += (char)c;
                     lexeme.line = m_file.line();
@@ -103,10 +110,12 @@ Lexeme Lexer::makeLexeme() {
                     c = m_file.advance();
                     state = STATE_SLASH;
 
+                // beginning of a multi-line comment
                 } else if (c == '{') {
                     c = m_file.advance();
                     state = STATE_COMMENT_MULTI_LINE;
 
+                // this can be either a colon or a assign (:=)
                 } else if (c == ':') {
                     lexeme.token += (char)c;
                     lexeme.line = m_file.line();
@@ -114,6 +123,7 @@ Lexeme Lexer::makeLexeme() {
                     c = m_file.advance();
                     state = STATE_COLON;
 
+                // can be less than (<), less or equal (<=) or difference (<>)
                 } else if (c == '<') {
                     lexeme.token += (char)c;
                     lexeme.line = m_file.line();
@@ -121,6 +131,7 @@ Lexeme Lexer::makeLexeme() {
                     c = m_file.advance();
                     state = STATE_LESS_THAN;
 
+                // this can be either a greater than (>) or greater or equal (>=)
                 } else if (c == '>') {
                     lexeme.token += (char)c;
                     lexeme.line = m_file.line();
@@ -128,6 +139,8 @@ Lexeme Lexer::makeLexeme() {
                     c = m_file.advance();
                     state = STATE_GREATER_THAN;
 
+                // this is a equal to relational operator
+                // (both '=' and '==' are 'equal to')
                 } else if (c == '=') {
                     lexeme.token += (char)c;
                     lexeme.line = m_file.line();
@@ -135,12 +148,16 @@ Lexeme Lexer::makeLexeme() {
                     c = m_file.advance();
                     state = STATE_EQUAL;
 
+                // this is the start of a literal string. this token finishes
+                // when another " is found. there must be a closing " before a
+                // new line
                 } else if (c == '\"') {
                     lexeme.line = m_file.line();
                     lexeme.column = m_file.column();
                     c = m_file.advance();
                     state = STATE_STRING;
 
+                // end of file or invalid character
                 } else {
                     if (c == '\0') {
                         lexeme.line = m_file.line();
@@ -189,99 +206,6 @@ Lexeme Lexer::makeLexeme() {
                 } else {
                     lexeme.type = TT_LITERAL_DECIMAL;
                     state = STATE_FINAL;
-                }
-                break;
-
-            case STATE_SLASH:
-                if (c == '/') {
-                    lexeme.token.clear();
-                    c = m_file.advance();
-                    state = STATE_COMMENT_SINGLE_LINE;
-                } else {
-                    lexeme.type = TT_DIV;
-                    state = STATE_FINAL;
-                }
-                break;
-
-            case STATE_COLON:
-                if (c == '=') {
-                    lexeme.token += (char)c;
-                    lexeme.type = TT_ASSIGN;
-                    c = m_file.advance();
-                    state = STATE_FINAL;
-                } else {
-                    lexeme.type = TT_COLON;
-                    state = STATE_FINAL;
-                }
-                break;
-
-            case STATE_LESS_THAN:
-                if (c == '=') {
-                    lexeme.token += (char)c;
-                    lexeme.type = TT_LOWER_EQUAL;
-                    c = m_file.advance();
-                    state = STATE_FINAL;
-                } else if (c == '>') {
-                    lexeme.token += (char)c;
-                    lexeme.type = TT_DIFFERENCE;
-                    c = m_file.advance();
-                    state = STATE_FINAL;
-                } else {
-                    lexeme.type = TT_LOWER;
-                    state = STATE_FINAL;
-                }
-                break;
-
-            case STATE_GREATER_THAN:
-                if (c == '=') {
-                    lexeme.token += (char)c;
-                    lexeme.type = TT_GREATER_EQUAL;
-                    c = m_file.advance();
-                    state = STATE_FINAL;
-                } else {
-                    lexeme.type = TT_GREATER;
-                    state = STATE_FINAL;
-                }
-                break;
-
-            case STATE_EQUAL:
-                if (c == '=') {
-                    lexeme.token += (char)c;
-                    lexeme.type = TT_EQUAL;
-                    c = m_file.advance();
-                    state = STATE_FINAL;
-                } else {
-                    lexeme.type = TT_EQUAL;
-                    state = STATE_FINAL;
-                }
-                break;
-
-            case STATE_COMMENT_SINGLE_LINE:
-                if (c == '\n') {
-                    state = STATE_INITIAL;
-                } else if (c == '\0') {
-                    lexeme.line = m_file.line();
-                    lexeme.column = m_file.column();
-                    lexeme.type = TT_END_OF_FILE;
-                    state = STATE_FINAL;
-                } else {
-                    c = m_file.advance();
-                    state = STATE_COMMENT_SINGLE_LINE;
-                }
-                break;
-
-            case STATE_COMMENT_MULTI_LINE:
-                if (c == '}') {
-                    c = m_file.advance();
-                    state = STATE_INITIAL;
-                } else if (c == '\0') {
-                    lexeme.line = m_file.line();
-                    lexeme.column = m_file.column();
-                    lexeme.type = TT_UNEXPECTED_EOF;
-                    state = STATE_FINAL;
-                } else {
-                    c = m_file.advance();
-                    state = STATE_COMMENT_MULTI_LINE;
                 }
                 break;
 
@@ -348,6 +272,99 @@ Lexeme Lexer::makeLexeme() {
                 } else {
                     lexeme.token += '0';
                     lexeme.type = TT_LITERAL_REAL;
+                    state = STATE_FINAL;
+                }
+                break;
+
+            case STATE_SLASH:
+                if (c == '/') {
+                    lexeme.token.clear();
+                    c = m_file.advance();
+                    state = STATE_COMMENT_SINGLE_LINE;
+                } else {
+                    lexeme.type = TT_DIV;
+                    state = STATE_FINAL;
+                }
+                break;
+
+            case STATE_COMMENT_SINGLE_LINE:
+                if (c == '\n') {
+                    state = STATE_INITIAL;
+                } else if (c == '\0') {
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    lexeme.type = TT_END_OF_FILE;
+                    state = STATE_FINAL;
+                } else {
+                    c = m_file.advance();
+                    state = STATE_COMMENT_SINGLE_LINE;
+                }
+                break;
+
+            case STATE_COMMENT_MULTI_LINE:
+                if (c == '}') {
+                    c = m_file.advance();
+                    state = STATE_INITIAL;
+                } else if (c == '\0') {
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    lexeme.type = TT_UNEXPECTED_EOF;
+                    state = STATE_FINAL;
+                } else {
+                    c = m_file.advance();
+                    state = STATE_COMMENT_MULTI_LINE;
+                }
+                break;
+
+            case STATE_COLON:
+                if (c == '=') {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_ASSIGN;
+                    c = m_file.advance();
+                    state = STATE_FINAL;
+                } else {
+                    lexeme.type = TT_COLON;
+                    state = STATE_FINAL;
+                }
+                break;
+
+            case STATE_LESS_THAN:
+                if (c == '=') {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_LOWER_EQUAL;
+                    c = m_file.advance();
+                    state = STATE_FINAL;
+                } else if (c == '>') {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_DIFFERENCE;
+                    c = m_file.advance();
+                    state = STATE_FINAL;
+                } else {
+                    lexeme.type = TT_LOWER;
+                    state = STATE_FINAL;
+                }
+                break;
+
+            case STATE_GREATER_THAN:
+                if (c == '=') {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_GREATER_EQUAL;
+                    c = m_file.advance();
+                    state = STATE_FINAL;
+                } else {
+                    lexeme.type = TT_GREATER;
+                    state = STATE_FINAL;
+                }
+                break;
+
+            case STATE_EQUAL:
+                if (c == '=') {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_EQUAL;
+                    c = m_file.advance();
+                    state = STATE_FINAL;
+                } else {
+                    lexeme.type = TT_EQUAL;
                     state = STATE_FINAL;
                 }
                 break;

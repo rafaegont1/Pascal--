@@ -69,11 +69,6 @@ enum TokenType {
     TT_LITERAL_STRING,
 };
 
-/**
- *  @brief Converts a TokenType enumeration value to its string representation.
- *  @param type The token type enumeration value to convert.
- *  @return A string representation of the token type.
- */
 std::string tt2str(enum TokenType type);
 
 #endif // TOKEN_TYPE_HPP

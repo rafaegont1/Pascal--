@@ -1,9 +1,13 @@
 program hex;
 
 var
-    num: integer;
+  num : integer;
 
-num := 0x1F02;
-writeln ("num = ", num);
-
+begin
+  { this is a
+  multi-line
+  comment }
+  num := 0x1F02;
+  // this is a single-line comment
+  writeln ("num = ", num);
 end.

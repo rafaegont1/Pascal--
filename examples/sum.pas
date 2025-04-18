@@ -1,13 +1,13 @@
 program sum;
 
 var
-    num1, num2, sum: integer;
+  num1, num2, sum : integer;
 
-write ("Insert number 1: ");
-readln (num1);
-write ("Insert number 2: ");
-readln (num2);
+begin
+  write ("Insert number 1: ");
+  readln (num1);
+  write ("Insert number 2: ");
+  readln (num2);
 
-writeln ("num1 + num2 = ", sum); // prints sum of num1 and num2
-
+  writeln ("num1 + num2 = ", sum); // prints sum of num1 and num2
 end.
