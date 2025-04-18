@@ -3,68 +3,86 @@
 #include <iostream>
 #include <string>
 #include "pascal--/lexical/TokenType.hpp"
+#include "pascal--/util/File.hpp"
 
 enum State {
     STATE_INITIAL,
+    STATE_COMMENT_SINGLE_LINE,
+    STATE_COMMENT_MULTI_LINE,
+    STATE_ALNUM,
+    STATE_ZERO,
     STATE_SLASH,
-    STATE_COMMENT_LINE,
-    STATE_COMMENT_BLOCK,
+    STATE_COLON,
     STATE_LESS_THAN,
     STATE_GREATER_THAN,
-    STATE_ALNUM,
+    STATE_EQUAL,
     STATE_DIGIT,
     STATE_REAL,
     STATE_STRING,
-    STATE_ZERO,
     STATE_OCTAL,
     STATE_HEX,
-    STATE_COLON,
-    STATE_EQUAL,
     STATE_FINAL
 };
 
-Lexer::Lexer(const char* filename) : m_line{1}, m_column{1} {
-    m_input = fopen(filename, "r");
-    if (!m_input) {
-        throw std::string("Unable to open file");
-    }
+Lexer::Lexer() {
 }
 
 Lexer::~Lexer() {
-    if (m_input != nullptr) {
-        fclose(m_input);
-    }
 }
 
-Lexeme Lexer::nextToken() {
-    State state = STATE_INITIAL;
-    Lexeme lexeme;
+bool static inline isOctal(char c) {
+    return ('0' <= c && c <= '7');
+}
 
-    lexeme.line = m_line;
-    lexeme.column = m_column;
+bool static inline isHex(char c) {
+    return (std::isdigit(c) || ('A' <= c && c <= 'F'));
+}
+
+const std::vector<Lexeme>& Lexer::scanFile(const char* filename) {
+    m_file.open(filename);
+
+    while (!m_file.isAtEOF()) {
+        Lexeme lexeme = makeLexeme();
+        if (lexeme.type != TT_END_OF_FILE) {
+            m_lexemes.push_back(std::move(lexeme));
+        }
+    }
+
+    m_file.close();
+
+    return m_lexemes;
+}
+
+Lexeme Lexer::makeLexeme() {
+    Lexeme lexeme;
+    char c = m_file.peek();
+    State state = STATE_INITIAL;
 
     while (state != STATE_FINAL) {
-        int c = fgetc(m_input);
-
         switch (state) {
             case STATE_INITIAL:
-                if (c == ' ' || c == '\t' || c == '\r') {
-                    lexeme.column++;
+                if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+                    c = m_file.advance();
                     state = STATE_INITIAL;
 
-                } else if (c == '\n') {
-                    newLine(lexeme);
-                    state = STATE_INITIAL;
-
-                } else if (isalpha(c)) {
+                } else if (std::isalpha(c)) {
                     lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    c = m_file.advance();
                     state = STATE_ALNUM;
 
                 } else if (c == '0') {
+                    lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    c = m_file.advance();
                     state = STATE_ZERO;
 
                 } else if ('1' <= c && c <= '9') {
                     lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
                     state = STATE_DIGIT;
 
                 } else if (
@@ -72,66 +90,128 @@ Lexeme Lexer::nextToken() {
                     c == '.' || c == '(' || c == ')'
                 ) {
                     lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
                     lexeme.type = SymbolTable::find(lexeme.token);
+                    c = m_file.advance();
                     state = STATE_FINAL;
 
                 } else if (c == '/') {
                     lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    c = m_file.advance();
                     state = STATE_SLASH;
 
                 } else if (c == '{') {
-                    state = STATE_COMMENT_BLOCK;
+                    c = m_file.advance();
+                    state = STATE_COMMENT_MULTI_LINE;
 
                 } else if (c == ':') {
+                    lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    c = m_file.advance();
                     state = STATE_COLON;
 
                 } else if (c == '<') {
                     lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    c = m_file.advance();
                     state = STATE_LESS_THAN;
 
                 } else if (c == '>') {
                     lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    c = m_file.advance();
                     state = STATE_GREATER_THAN;
 
                 } else if (c == '=') {
                     lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    c = m_file.advance();
                     state = STATE_EQUAL;
 
                 } else if (c == '\"') {
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    c = m_file.advance();
                     state = STATE_STRING;
 
                 } else {
-                    if (c == EOF) {
+                    if (c == '\0') {
+                        lexeme.line = m_file.line();
+                        lexeme.column = m_file.column();
                         lexeme.type = TT_END_OF_FILE;
                         state = STATE_FINAL;
                     } else {
                         lexeme.token += (char)c;
+                        lexeme.line = m_file.line();
+                        lexeme.column = m_file.column();
                         lexeme.type = TT_INVALID_TOKEN;
                         state = STATE_FINAL;
                     }
                 }
                 break;
 
+            case STATE_ALNUM:
+                if (std::isalnum(c)) {
+                    lexeme.token += (char)c;
+                    c = m_file.advance();
+                    state = STATE_ALNUM;
+                } else {
+                    lexeme.type = SymbolTable::find(lexeme.token);
+                    state = STATE_FINAL;
+                }
+                break;
+
+            case STATE_ZERO:
+                if (isOctal(c)) {
+                    lexeme.token += (char)c;
+                    c = m_file.advance();
+                    state = STATE_OCTAL;
+                } else if (c == 'x') {
+                    lexeme.token += (char)c;
+                    c = m_file.advance();
+                    state = STATE_HEX;
+                } else if (c == '.') {
+                    lexeme.token += (char)c;
+                    c = m_file.advance();
+                    state = STATE_REAL;
+                } else if (std::isalpha(c)) {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_INVALID_TOKEN;
+                    state = STATE_FINAL;
+                    // THROW ERROR HERE
+                } else {
+                    lexeme.type = TT_LITERAL_DECIMAL;
+                    state = STATE_FINAL;
+                }
+                break;
+
             case STATE_SLASH:
                 if (c == '/') {
-                    lexeme.token.pop_back();
-                    state = STATE_COMMENT_LINE;
+                    lexeme.token.clear();
+                    c = m_file.advance();
+                    state = STATE_COMMENT_SINGLE_LINE;
                 } else {
-                    ungetChar(c);
                     lexeme.type = TT_DIV;
                     state = STATE_FINAL;
                 }
                 break;
 
-            case STATE_COMMENT_LINE:
-                if (c == '\n') {
-                    newLine(lexeme);
-                    state = STATE_INITIAL;
-                } else if (c == EOF) {
-                    lexeme.type = TT_END_OF_FILE;
+            case STATE_COLON:
+                if (c == '=') {
+                    lexeme.token += (char)c;
+                    lexeme.type = TT_ASSIGN;
+                    c = m_file.advance();
                     state = STATE_FINAL;
                 } else {
-                    state = STATE_COMMENT_LINE;
+                    lexeme.type = TT_COLON;
+                    state = STATE_FINAL;
                 }
                 break;
 
@@ -139,13 +219,14 @@ Lexeme Lexer::nextToken() {
                 if (c == '=') {
                     lexeme.token += (char)c;
                     lexeme.type = TT_LOWER_EQUAL;
+                    c = m_file.advance();
                     state = STATE_FINAL;
                 } else if (c == '>') {
                     lexeme.token += (char)c;
                     lexeme.type = TT_DIFFERENCE;
+                    c = m_file.advance();
                     state = STATE_FINAL;
                 } else {
-                    ungetChar(c);
                     lexeme.type = TT_LOWER;
                     state = STATE_FINAL;
                 }
@@ -155,90 +236,117 @@ Lexeme Lexer::nextToken() {
                 if (c == '=') {
                     lexeme.token += (char)c;
                     lexeme.type = TT_GREATER_EQUAL;
+                    c = m_file.advance();
                     state = STATE_FINAL;
                 } else {
-                    ungetChar(c);
                     lexeme.type = TT_GREATER;
                     state = STATE_FINAL;
                 }
                 break;
 
-            case STATE_ALNUM:
-                if (isalnum(c)) {
+            case STATE_EQUAL:
+                if (c == '=') {
                     lexeme.token += (char)c;
-                    state = STATE_ALNUM;
+                    lexeme.type = TT_EQUAL;
+                    c = m_file.advance();
+                    state = STATE_FINAL;
                 } else {
-                    ungetChar(c);
-                    lexeme.type = SymbolTable::find(lexeme.token);
+                    lexeme.type = TT_EQUAL;
                     state = STATE_FINAL;
                 }
                 break;
 
-            case STATE_ZERO:
-                if (isdigit(c)) {
-                    lexeme.token += (char)c;
-                    state = STATE_OCTAL;
-                } else if (c == 'x') {
-                    state = STATE_HEX;
+            case STATE_COMMENT_SINGLE_LINE:
+                if (c == '\n') {
+                    state = STATE_INITIAL;
+                } else if (c == '\0') {
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    lexeme.type = TT_END_OF_FILE;
+                    state = STATE_FINAL;
+                } else {
+                    c = m_file.advance();
+                    state = STATE_COMMENT_SINGLE_LINE;
+                }
+                break;
+
+            case STATE_COMMENT_MULTI_LINE:
+                if (c == '}') {
+                    c = m_file.advance();
+                    state = STATE_INITIAL;
+                } else if (c == '\0') {
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    lexeme.type = TT_UNEXPECTED_EOF;
+                    state = STATE_FINAL;
+                } else {
+                    c = m_file.advance();
+                    state = STATE_COMMENT_MULTI_LINE;
                 }
                 break;
 
             case STATE_OCTAL:
-                if ('0' <= c && c <= '7') {
+                if (isOctal(c)) {
                     lexeme.token += (char)c;
-                } else if (isalpha(c)) {
+                    c = m_file.advance();
+                } else if (std::isalpha(c)) {
                     lexeme.token += (char)c;
                     lexeme.type = TT_INVALID_TOKEN;
                     state = STATE_FINAL;
+                    // THROW ERROR HERE
                 } else {
-                    ungetChar(c);
                     lexeme.type = TT_LITERAL_OCTAL;
                     state = STATE_FINAL;
                 }
                 break;
 
             case STATE_HEX:
-                if (isdigit(c) || ('A' <= c && c <= 'F')) {
+                if (isHex(c)) {
                     lexeme.token += (char)c;
-                } else if (isalpha(c)) {
+                    c = m_file.advance();
+                } else if (std::isalpha(c)) {
                     lexeme.token += (char)c;
                     lexeme.type = TT_INVALID_TOKEN;
                     state = STATE_FINAL;
+                    // THROW ERROR HERE
                 } else {
-                    ungetChar(c);
                     lexeme.type = TT_LITERAL_HEX;
                     state = STATE_FINAL;
                 }
                 break;
 
             case STATE_DIGIT:
-                if (isdigit(c)) {
+                if (std::isdigit(c)) {
                     lexeme.token += (char)c;
+                    c = m_file.advance();
                     state = STATE_DIGIT;
                 } else if (c == '.') {
                     lexeme.token += (char)c;
+                    c = m_file.advance();
                     state = STATE_REAL;
-                } else if (isalpha(c)) {
+                } else if (std::isalpha(c)) {
                     lexeme.token += (char)c;
                     lexeme.type = TT_INVALID_TOKEN;
                     state = STATE_FINAL;
+                    // THROW ERROR HERE
                 } else {
-                    ungetChar(c);
                     lexeme.type = TT_LITERAL_DECIMAL;
                     state = STATE_FINAL;
                 }
                 break;
 
             case STATE_REAL:
-                if (isdigit(c)) {
+                if (std::isdigit(c)) {
                     lexeme.token += (char)c;
+                    c = m_file.advance();
                     state = STATE_REAL;
-                } else if (isalpha(c)) {
+                } else if (std::isalpha(c)) {
                     lexeme.token += (char)c;
                     lexeme.type = TT_INVALID_TOKEN;
                     state = STATE_FINAL;
+                    // THROW ERROR HERE
                 } else {
-                    ungetChar(c);
+                    lexeme.token += '0';
                     lexeme.type = TT_LITERAL_REAL;
                     state = STATE_FINAL;
                 }
@@ -249,6 +357,7 @@ Lexeme Lexer::nextToken() {
                     // lexeme.token += (char)c; // TODO: será que eu coloco o '\n' aqui? ele vai dar quebra de linha no print
                     lexeme.type = TT_INVALID_TOKEN;
                     state = STATE_FINAL;
+                    // THROW ERROR HERE
                 } else if (lexeme.token.back() == '\\') {
                     switch (c) {
                         case 'n':  lexeme.token.back() = '\n'; break;
@@ -258,71 +367,36 @@ Lexeme Lexer::nextToken() {
                         case '\"': lexeme.token.back() = '\"'; break;
                         default:   lexeme.type = TT_INVALID_TOKEN; break;
                     }
+                    c = m_file.advance();
                     state = STATE_STRING;
                 } else if (c != '\"') {
                     lexeme.token += (char)c;
+                    c = m_file.advance();
                     state = STATE_STRING;
                 } else {
                     lexeme.type = TT_LITERAL_STRING;
-                    state = STATE_FINAL;
-                }
-                break;
-
-            case STATE_COMMENT_BLOCK:
-                if (c == '}') {
-                    state = STATE_INITIAL;
-                } else if (c == EOF) {
-                    lexeme.type = TT_UNEXPECTED_EOF;
-                    state = STATE_FINAL;
-                } else {
-                    state = STATE_COMMENT_BLOCK;
-                }
-                break;
-
-            case STATE_COLON:
-                if (c == '=') {
-                    lexeme.token += (char)c;
-                    lexeme.type = TT_ASSIGN;
-                    state = STATE_FINAL;
-                } else {
-                    ungetChar(c);
-                    lexeme.type = TT_COLON;
-                    state = STATE_FINAL;
-                }
-                break;
-
-            case STATE_EQUAL:
-                if (c == '=') {
-                    lexeme.token += (char)c;
-                    lexeme.type = TT_EQUAL;
-                    state = STATE_FINAL;
-                } else {
-                    lexeme.type = TT_EQUAL;
+                    c = m_file.advance();
                     state = STATE_FINAL;
                 }
                 break;
 
             default:
-                throw std::string("invalid state: " + std::to_string(state));
+                throw std::string(
+                    "lexical error -> invalid state number " +
+                    std::to_string(state)
+                );
         }
-
-        m_column++;
     }
 
     return lexeme;
 }
 
-void Lexer::newLine(Lexeme& lexeme) {
-    m_line += 1;
-    m_column = 0;
-
-    lexeme.line = m_line;
-    lexeme.column = m_column + 1;
-}
-
-void Lexer::ungetChar(int c) {
-    if (c != EOF) {
-        ungetc(c, m_input);
-    }
-    m_column--;
+std::string Lexer::lexicalError(
+    const std::string& message, const std::string& token
+) {
+    return std::string("lexical error -> " + message +
+        "\n\ttoken: " + token +
+        "\n\tline: " + std::to_string(m_file.line()) +
+        "\n\tcolumn: " + std::to_string(m_file.column())
+    );
 }

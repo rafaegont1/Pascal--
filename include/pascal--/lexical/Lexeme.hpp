@@ -10,14 +10,15 @@
  */
 struct Lexeme {
     std::string token;
-    enum TokenType type;
     int line;
     int column;
+    enum TokenType type;
 
     /**
      *  @brief Constructs an empty Lexeme with default values.
      */
     Lexeme();
+    Lexeme(const std::string& token, int line, int column, enum TokenType type);
 
     /**
      *  @brief Virtual destructor to allow for inheritance.
