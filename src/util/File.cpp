@@ -13,7 +13,7 @@ File::~File() {
     close();
 }
 
-static const char* getText(const char* filename) {
+static const char* get_text(const char* filename) {
     std::ifstream text(filename, std::ios::binary);
 
     // Throw exception if couldn't open file
@@ -23,17 +23,17 @@ static const char* getText(const char* filename) {
 
     // Determine the size of the file in bytes
     text.seekg(0, std::ios::end);
-    std::streamsize textSize = text.tellg();
+    std::streamsize text_size = text.tellg();
     text.seekg(0, std::ios::beg);
 
     // Allocate memory for the wchar_t buffer
-    char* buffer = new char[textSize];
+    char* buffer = new char[text_size + 1];
 
     // Read the file contents into the buffer
-    text.read(buffer, textSize);
+    text.read(buffer, text_size);
 
     // Set the EOF as null character '\0'
-    buffer[textSize-1] = '\0';
+    buffer[text_size] = '\0';
 
     // Close the file
     text.close();
@@ -42,7 +42,7 @@ static const char* getText(const char* filename) {
 }
 
 void File::open(const char* filename) {
-    const char* buffer = getText(filename);
+    const char* buffer = get_text(filename);
 
     m_start = buffer;
     m_current = buffer;
@@ -51,7 +51,7 @@ void File::open(const char* filename) {
 }
 
 void File::close() {
-    if (isOpen()) {
+    if (is_open()) {
         delete[] m_start;
         m_start = nullptr;
         m_current = nullptr;
@@ -66,23 +66,23 @@ void File::rewind() {
     m_column = 1;
 }
 
-bool File::isOpen() const {
+bool File::is_open() const {
     return m_start != nullptr;
 }
 
-bool File::isAtEOF() const {
+bool File::is_at_EOF() const {
     return *m_current == '\0';
 }
 
 char File::advance() {
     char c;
 
-    if (isAtEOF()) {
+    if (is_at_EOF()) {
         c = '\0';
     } else {
         c = *(++m_current);
 
-        if (peekPrev() == '\n') {
+        if (peek_prev() == '\n') {
             m_line++;
             m_column = 1;
         } else {
@@ -97,10 +97,10 @@ char File::peek() const {
     return *m_current;
 }
 
-char File::peekNext() const {
-    return !isAtEOF() ? *(m_current + 1) : '\0';
+char File::peek_next() const {
+    return !is_at_EOF() ? *(m_current + 1) : '\0';
 }
 
-char File::peekPrev() const {
+char File::peek_prev() const {
     return (m_current != m_start) ? *(m_current - 1) : '\0';
 }

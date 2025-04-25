@@ -1,7 +1,7 @@
 program sum;
 
 var
-  num1, num2, sum : integer;
+  num1, num2, sum: integer;
 
 begin
   write ("Insert number 1: ");

@@ -10,12 +10,12 @@ public:
     void open(const char* filename);
     void close();
     void rewind();
-    [[nodiscard]] bool isOpen() const;
-    [[nodiscard]] bool isAtEOF() const;
+    [[nodiscard]] bool is_open() const;
+    [[nodiscard]] bool is_at_EOF() const;
     char advance();
     [[nodiscard]] char peek() const;
-    [[nodiscard]] char peekNext() const;
-    [[nodiscard]] char peekPrev() const;
+    [[nodiscard]] char peek_next() const;
+    [[nodiscard]] char peek_prev() const;
 
     [[nodiscard]] int line() const { return m_line; }
     [[nodiscard]] int column() const { return m_column; }

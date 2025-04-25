@@ -1,7 +1,7 @@
 program hex;
 
 var
-  num : integer;
+  num: integer;
 
 begin
   { this is a

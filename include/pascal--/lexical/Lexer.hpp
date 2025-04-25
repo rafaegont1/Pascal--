@@ -11,15 +11,13 @@ public:
     Lexer();
     virtual ~Lexer();
 
-    const std::vector<Lexeme>& scanFile(const char* filename);
+    const std::vector<Lexeme>& scan_file(const char* filename);
 
     const std::vector<Lexeme>& lexemes() { return m_lexemes; }
 
 private:
-    Lexeme makeLexeme();
-    std::string lexicalError(
-        const std::string& message, const std::string& token
-    );
+    Lexeme make_lexeme();
+    std::string lexical_error(const std::string& message, Lexeme& lexeme);
 
     File m_file;
     std::vector<Lexeme> m_lexemes;

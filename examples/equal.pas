@@ -1,7 +1,8 @@
 program equal;
 
 var
-  a, b : interger;
+  a, b: interger;
+  r: real = 3.;
 
 begin
   a := 25 div 03;
