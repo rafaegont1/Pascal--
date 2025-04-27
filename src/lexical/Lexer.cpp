@@ -431,9 +431,9 @@ std::string Lexer::lexical_error(const std::string& message, Lexeme& lexeme) {
          .append("\n\ttoken: ")
          .append(lexeme.token)
          .append("\n\tline: ")
-         .append(std::to_string(m_file.line()))
+         .append(std::to_string(lexeme.line))
          .append("\n\tcolumn: ")
-         .append(std::to_string(m_file.column()));
+         .append(std::to_string(lexeme.column));
 
     return error;
 }
