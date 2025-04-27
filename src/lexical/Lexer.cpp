@@ -35,6 +35,7 @@ const std::vector<Lexeme>& Lexer::scan_file(const char* filename) {
 
     while (!m_file.is_at_EOF()) {
         Lexeme lexeme = make_lexeme();
+
         if (lexeme.type != TT_END_OF_FILE) {
             m_lexemes.push_back(std::move(lexeme));
         }
@@ -176,6 +177,8 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_ALNUM;
                 } else {
+                    // check if the token is in SymbolTable. if it doesn't, it's
+                    // a variable name
                     lexeme.type = SymbolTable::find(lexeme.token);
                     state = STATE_FINAL;
                 }
@@ -194,6 +197,8 @@ Lexeme Lexer::make_lexeme() {
                     lexeme.token += (char)c;
                     c = m_file.advance();
                     state = STATE_REAL;
+                } else if ('8' <= c && c <= '9') {
+                    throw lexical_error("8 and 9 aren't octal digits", lexeme);
                 } else if (std::isalpha(c)) {
                     throw lexical_error(
                         "unexpected alphabetical character", lexeme
@@ -213,6 +218,8 @@ Lexeme Lexer::make_lexeme() {
                     throw lexical_error(
                         "unexpected alphabetical character", lexeme
                     );
+                } else if ('8' <= c && c <= '9') {
+                    throw lexical_error("8 and 9 aren't octal digits", lexeme);
                 } else {
                     lexeme.type = TT_LITERAL_OCTAL;
                     state = STATE_FINAL;
