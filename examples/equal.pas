@@ -1,7 +1,7 @@
 program equal;
 
 var
-  a, b: interger;
+  a, b: integer;
   r: real = 3.;
 
 begin
