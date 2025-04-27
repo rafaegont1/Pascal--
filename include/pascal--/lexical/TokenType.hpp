@@ -21,7 +21,7 @@ enum TokenType {
     TT_OR,                 // or
     TT_AND,                // and
     TT_NOT,                // not
-    TT_EQUAL,              // ==
+    TT_EQUAL,              // = ==
     TT_DIFFERENCE,         // <>
     TT_GREATER,            // >
     TT_GREATER_EQUAL,      // >=
