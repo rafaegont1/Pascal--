@@ -15,6 +15,6 @@ std::string Lexeme::str() const {
     std::string line_ = std::to_string(line);
     std::string column_ = std::to_string(column);
 
-    return "(" + line_ + ", " + column_
-        + ", \"" + token + "\", " + tt2str(type) + ")";
+    return "(" + tt2str(type) + ", \"" + token + "\", " +
+           line_ + ", " + column_ + ")";
 }

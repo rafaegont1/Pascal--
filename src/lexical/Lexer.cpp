@@ -45,18 +45,18 @@ const std::vector<Lexeme>& Lexer::scan_file(const char* filename) {
     return m_lexemes;
 }
 
-bool static inline is_octal(char c) {
+static inline bool is_octal(char c) {
     return ('0' <= c && c <= '7');
 }
 
-bool static inline is_hex(char c) {
+static inline bool is_hex(char c) {
     return (std::isdigit(c) || ('A' <= c && c <= 'F'));
 }
 
 Lexeme Lexer::make_lexeme() {
     Lexeme lexeme;
     char c = m_file.peek();
-    State state = STATE_INITIAL;
+    enum State state = STATE_INITIAL;
 
     while (state != STATE_FINAL) {
         switch (state) {

@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
         auto& lexemes = lexer.scan_file(argv[1]);
 
         for (const auto& lexeme : lexemes) {
-            std::cout << "Token: " << lexeme.str() << std::endl;
+            std::cout << lexeme.str() << std::endl;
         }
 
     } catch (const std::string& error) {

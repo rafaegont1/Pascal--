@@ -9,7 +9,7 @@ begin
   b := a / 0x02;
 
   if (a = b) then
-    write ("that's it");
+    write ("that's\tit");
 
   else if (a == b) then
     write ("ok");
