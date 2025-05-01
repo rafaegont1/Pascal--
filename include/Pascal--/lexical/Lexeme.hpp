@@ -2,16 +2,16 @@
 #define LEXEME_HPP
 
 #include <string>
-#include "pascal--/lexical/TokenType.hpp"
+#include "Pascal--/lexical/TokenType.hpp"
 
 struct Lexeme {
     std::string token;
+    enum TokenType type;
     int line;
     int column;
-    enum TokenType type;
 
     Lexeme();
-    Lexeme(const std::string& token, int line, int column, enum TokenType type);
+    Lexeme(const std::string& token, enum TokenType type, int line, int column);
 
     virtual ~Lexeme();
 

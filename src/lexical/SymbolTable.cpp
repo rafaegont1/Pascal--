@@ -1,4 +1,4 @@
-#include "pascal--/lexical/SymbolTable.hpp"
+#include "Pascal--/lexical/SymbolTable.hpp"
 
 #include <unordered_map>
 
@@ -11,19 +11,19 @@ static const std::unordered_map<std::string, enum TokenType> s_symbols = {
     {"*", TT_MUL},
     {"/", TT_DIV},
     {"mod", TT_MOD},
-    {"div", TT_DIVINT},
+    {"div", TT_FLOORDIV},
 
     // Logical, relational operators and assignments
     {"or", TT_OR},
     {"and", TT_AND},
     {"not", TT_NOT},
-    {"=", TT_EQUAL},
-    {"==", TT_EQUAL},
-    {"<>", TT_DIFFERENCE},
-    {">", TT_GREATER},
-    {">=", TT_GREATER_EQUAL},
-    {"<", TT_LOWER},
-    {"<=", TT_LOWER_EQUAL},
+    {"=", TT_EQL},
+    {"==", TT_EQL},
+    {"<>", TT_NEQ},
+    {">", TT_GTR},
+    {">=", TT_GEQ},
+    {"<", TT_LSS},
+    {"<=", TT_LEQ},
     {":=", TT_ASSIGN},
 
     // Symbols
@@ -31,31 +31,31 @@ static const std::unordered_map<std::string, enum TokenType> s_symbols = {
     {",", TT_COMMA},
     {".", TT_PERIOD},
     {":", TT_COLON},
-    {"(", TT_OPEN_PARENTHESES},
-    {")", TT_CLOSE_PARENTHESES},
+    {"(", TT_LPAREN},
+    {")", TT_RPAREN},
     {"\"", TT_QUOTES},
 
     // Keywords
-    {"program", TT_PROGRAM},
-    {"var", TT_VAR},
+    {"program", TT_PROGRAMSYM},
+    {"var", TT_VARSYM},
     {"integer", TT_TYPE_INTEGER},
     {"real", TT_TYPE_REAL},
     {"string", TT_TYPE_STRING},
-    {"begin", TT_BEGIN},
-    {"end", TT_END},
-    {"for", TT_FOR},
-    {"to", TT_TO},
-    {"while", TT_WHILE},
-    {"do", TT_DO},
-    {"break", TT_BREAK},
-    {"continue", TT_CONTINUE},
-    {"if", TT_IF},
-    {"else", TT_ELSE},
-    {"then", TT_THEN},
-    {"write", TT_WRITE},
-    {"writeln", TT_WRITELN},
-    {"read", TT_READ},
-    {"readln", TT_READLN}
+    {"begin", TT_BEGINSYM},
+    {"end", TT_ENDSYM},
+    {"for", TT_FORSYM},
+    {"to", TT_TOSYM},
+    {"while", TT_WHILESYM},
+    {"do", TT_DOSYM},
+    {"break", TT_BREAKSYM},
+    {"continue", TT_CONTINUESYM},
+    {"if", TT_IFSYM},
+    {"else", TT_ELSESYM},
+    {"then", TT_THENSYM},
+    {"write", TT_WRITESYM},
+    {"writeln", TT_WRITELNSYM},
+    {"read", TT_READSYM},
+    {"readln", TT_READLNSYM}
 };
 
 bool contains(const std::string& token) {
@@ -64,7 +64,7 @@ bool contains(const std::string& token) {
 
 enum TokenType find(const std::string& token) {
     auto it = s_symbols.find(token);
-    return (it != s_symbols.end()) ? it->second : TT_VAR_NAME;
+    return (it != s_symbols.end()) ? it->second : TT_INVALID;
 }
 
 } // namespace SymbolTable

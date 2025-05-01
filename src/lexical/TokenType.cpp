@@ -1,11 +1,10 @@
-#include "pascal--/lexical/TokenType.hpp"
+#include "Pascal--/lexical/TokenType.hpp"
 
 std::string tt2str(enum TokenType type) {
     switch (type) {
         // Specials
-        case TT_UNEXPECTED_EOF:    return "UNEXPECTED_EOF";
-        case TT_INVALID_TOKEN:     return "INVALID_TOKEN";
-        case TT_END_OF_FILE:       return "END_OF_FILE";
+        case TT_INVALID:           return "INVALID";
+        case TT_EOF:               return "EOF";
 
         // Arithmetic operators
         case TT_ADD:               return "ADD";
@@ -13,18 +12,18 @@ std::string tt2str(enum TokenType type) {
         case TT_MUL:               return "MUL";
         case TT_DIV:               return "DIV";
         case TT_MOD:               return "MOD";
-        case TT_DIVINT:            return "DIVINT";
+        case TT_FLOORDIV:          return "FLOORDIV";
 
         // Logical, relational operators and assignments
         case TT_OR:                return "OR";
         case TT_AND:               return "AND";
         case TT_NOT:               return "NOT";
-        case TT_EQUAL:             return "EQUAL";
-        case TT_DIFFERENCE:        return "DIFFERENCE";
-        case TT_GREATER:           return "GREATER";
-        case TT_GREATER_EQUAL:     return "GREATER_EQUAL";
-        case TT_LOWER:             return "LOWER";
-        case TT_LOWER_EQUAL:       return "LOWER_EQUAL";
+        case TT_EQL:               return "EQL";
+        case TT_NEQ:               return "NEQ";
+        case TT_GTR:               return "GTR";
+        case TT_GEQ:               return "GEQ";
+        case TT_LSS:               return "LSS";
+        case TT_LEQ:               return "LEQ";
         case TT_ASSIGN:            return "ASSIGN";
 
         // Symbols
@@ -32,34 +31,34 @@ std::string tt2str(enum TokenType type) {
         case TT_COMMA:             return "COMMA";
         case TT_PERIOD:            return "PERIOD";
         case TT_COLON:             return "COLON";
-        case TT_OPEN_PARENTHESES:  return "OPEN_PARENTHESES";
-        case TT_CLOSE_PARENTHESES: return "CLOSE_PARENTHESES";
+        case TT_LPAREN:            return "LPAREN";
+        case TT_RPAREN:            return "RPAREN";
         case TT_QUOTES:            return "QUOTES";
 
         // Keywords
-        case TT_PROGRAM:           return "PROGRAM";
-        case TT_VAR:               return "VAR";
+        case TT_PROGRAMSYM:        return "PROGRAMSYM";
+        case TT_VARSYM:            return "VARSYM";
         case TT_TYPE_INTEGER:      return "TYPE_INTEGER";
         case TT_TYPE_REAL:         return "TYPE_REAL";
         case TT_TYPE_STRING:       return "TYPE_STRING";
-        case TT_BEGIN:             return "BEGIN";
-        case TT_END:               return "END";
-        case TT_FOR:               return "FOR";
-        case TT_TO:                return "TO";
-        case TT_WHILE:             return "WHILE";
-        case TT_DO:                return "DO";
-        case TT_BREAK:             return "BREAK";
-        case TT_CONTINUE:          return "CONTINUE";
-        case TT_IF:                return "IF";
-        case TT_ELSE:              return "ELSE";
-        case TT_THEN:              return "THEN";
-        case TT_WRITE:             return "WRITE";
-        case TT_WRITELN:           return "WRITELN";
-        case TT_READ:              return "READ";
-        case TT_READLN:            return "READLN";
+        case TT_BEGINSYM:          return "BEGINSYM";
+        case TT_ENDSYM:            return "ENDSYM";
+        case TT_FORSYM:            return "FORSYM";
+        case TT_TOSYM:             return "TOSYM";
+        case TT_WHILESYM:          return "WHILESYM";
+        case TT_DOSYM:             return "DOSYM";
+        case TT_BREAKSYM:          return "BREAKSYM";
+        case TT_CONTINUESYM:       return "CONTINUESYM";
+        case TT_IFSYM:             return "IFSYM";
+        case TT_ELSESYM:           return "ELSESYM";
+        case TT_THENSYM:           return "THENSYM";
+        case TT_WRITESYM:          return "WRITESYM";
+        case TT_WRITELNSYM:        return "WRITELNSYM";
+        case TT_READSYM:           return "READSYM";
+        case TT_READLNSYM:         return "READLNSYM";
 
         // Others
-        case TT_VAR_NAME:          return "VAR_NAME";
+        case TT_IDENT:             return "IDENT";
         case TT_LITERAL_OCTAL:     return "LITERAL_OCTAL";
         case TT_LITERAL_DECIMAL:   return "LITERAL_DECIMAL";
         case TT_LITERAL_HEX:       return "LITERAL_HEX";

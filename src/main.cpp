@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "pascal--/lexical/Lexer.hpp"
+#include "Pascal--/lexical/Lexer.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {

@@ -2,9 +2,9 @@
 #define LEXER_HPP
 
 #include <vector>
-#include "pascal--/lexical/Lexeme.hpp"
-#include "pascal--/lexical/SymbolTable.hpp"
-#include "pascal--/util/File.hpp"
+#include "Pascal--/lexical/Lexeme.hpp"
+#include "Pascal--/lexical/SymbolTable.hpp"
+#include "Pascal--/util/File.hpp"
 
 class Lexer {
 public:

@@ -1,11 +1,11 @@
-#include "pascal--/lexical/Lexeme.hpp"
+#include "Pascal--/lexical/Lexeme.hpp"
 
-Lexeme::Lexeme() : token(""), line(0), column(0), type(TT_END_OF_FILE) {
+Lexeme::Lexeme() : token(""), type(TT_EOF), line(0), column(0) {
 }
 
 Lexeme::Lexeme(
-    const std::string& token, int line, int column, enum TokenType type
-) : token(token), line(line), column(column), type(type) {
+    const std::string& token, enum TokenType type, int line, int column
+) : token(token), type(type), line(line), column(column) {
 }
 
 Lexeme::~Lexeme() {
@@ -15,6 +15,6 @@ std::string Lexeme::str() const {
     std::string line_ = std::to_string(line);
     std::string column_ = std::to_string(column);
 
-    return "(" + tt2str(type) + ", \"" + token + "\", " +
+    return "(\"" + token + "\", " + tt2str(type) + ", " +
            line_ + ", " + column_ + ")";
 }

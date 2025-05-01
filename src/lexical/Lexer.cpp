@@ -1,9 +1,10 @@
-#include "pascal--/lexical/Lexer.hpp"
+#include "Pascal--/lexical/Lexer.hpp"
 
+#include <cctype>
 #include <iostream>
 #include <string>
-#include "pascal--/lexical/TokenType.hpp"
-#include "pascal--/util/File.hpp"
+#include "Pascal--/lexical/TokenType.hpp"
+#include "Pascal--/util/File.hpp"
 
 enum State {
     STATE_INITIAL,
@@ -36,7 +37,7 @@ const std::vector<Lexeme>& Lexer::scan_file(const char* filename) {
     while (!m_file.is_at_EOF()) {
         Lexeme lexeme = make_lexeme();
 
-        if (lexeme.type != TT_END_OF_FILE) {
+        if (lexeme.type != TT_EOF) {
             m_lexemes.push_back(std::move(lexeme));
         }
     }
@@ -90,18 +91,6 @@ Lexeme Lexer::make_lexeme() {
                     lexeme.column = m_file.column();
                     c = m_file.advance();
                     state = STATE_DIGIT;
-
-                // check if 'c' is one of those symbols
-                } else if (
-                    c == '+' || c == '-' || c == '*' || c == ';' || c == ',' ||
-                    c == '.' || c == '(' || c == ')'
-                ) {
-                    lexeme.token += (char)c;
-                    lexeme.line = m_file.line();
-                    lexeme.column = m_file.column();
-                    lexeme.type = SymbolTable::find(lexeme.token);
-                    c = m_file.advance();
-                    state = STATE_FINAL;
 
                 // this can be either a division or a single-line comment
                 } else if (c == '/') {
@@ -158,12 +147,21 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_STRING;
 
+                // check if 'c' is a punctuation
+                } else if (std::ispunct(c)) {
+                    lexeme.token += (char)c;
+                    lexeme.line = m_file.line();
+                    lexeme.column = m_file.column();
+                    lexeme.type = SymbolTable::find(lexeme.token);
+                    c = m_file.advance();
+                    state = STATE_FINAL;
+
                 // end of file or invalid character
                 } else {
                     if (c == '\0') {
                         lexeme.line = m_file.line();
                         lexeme.column = m_file.column();
-                        lexeme.type = TT_END_OF_FILE;
+                        lexeme.type = TT_EOF;
                         state = STATE_FINAL;
                     } else {
                         throw lexical_error("invalid token", lexeme);
@@ -179,7 +177,8 @@ Lexeme Lexer::make_lexeme() {
                 } else {
                     // check if the token is in SymbolTable. if it doesn't, it's
                     // a variable name
-                    lexeme.type = SymbolTable::find(lexeme.token);
+                    enum TokenType symbol = SymbolTable::find(lexeme.token);
+                    lexeme.type = (symbol != TT_INVALID) ? symbol : TT_IDENT;
                     state = STATE_FINAL;
                 }
                 break;
@@ -299,7 +298,7 @@ Lexeme Lexer::make_lexeme() {
                 } else if (c == '\0') {
                     lexeme.line = m_file.line();
                     lexeme.column = m_file.column();
-                    lexeme.type = TT_END_OF_FILE;
+                    lexeme.type = TT_EOF;
                     state = STATE_FINAL;
                 } else {
                     c = m_file.advance();
@@ -336,16 +335,16 @@ Lexeme Lexer::make_lexeme() {
             case STATE_LESS_THAN:
                 if (c == '=') {
                     lexeme.token += (char)c;
-                    lexeme.type = TT_LOWER_EQUAL;
+                    lexeme.type = TT_LEQ;
                     c = m_file.advance();
                     state = STATE_FINAL;
                 } else if (c == '>') {
                     lexeme.token += (char)c;
-                    lexeme.type = TT_DIFFERENCE;
+                    lexeme.type = TT_NEQ;
                     c = m_file.advance();
                     state = STATE_FINAL;
                 } else {
-                    lexeme.type = TT_LOWER;
+                    lexeme.type = TT_LSS;
                     state = STATE_FINAL;
                 }
                 break;
@@ -353,11 +352,11 @@ Lexeme Lexer::make_lexeme() {
             case STATE_GREATER_THAN:
                 if (c == '=') {
                     lexeme.token += (char)c;
-                    lexeme.type = TT_GREATER_EQUAL;
+                    lexeme.type = TT_GEQ;
                     c = m_file.advance();
                     state = STATE_FINAL;
                 } else {
-                    lexeme.type = TT_GREATER;
+                    lexeme.type = TT_GTR;
                     state = STATE_FINAL;
                 }
                 break;
@@ -365,11 +364,11 @@ Lexeme Lexer::make_lexeme() {
             case STATE_EQUAL:
                 if (c == '=') {
                     lexeme.token += (char)c;
-                    lexeme.type = TT_EQUAL;
+                    lexeme.type = TT_EQL;
                     c = m_file.advance();
                     state = STATE_FINAL;
                 } else {
-                    lexeme.type = TT_EQUAL;
+                    lexeme.type = TT_EQL;
                     state = STATE_FINAL;
                 }
                 break;

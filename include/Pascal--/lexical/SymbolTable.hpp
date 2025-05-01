@@ -1,7 +1,7 @@
 #ifndef SYMBOLS_HPP
 #define SYMBOLS_HPP
 
-#include "pascal--/lexical/TokenType.hpp"
+#include "Pascal--/lexical/TokenType.hpp"
 
 namespace SymbolTable {
 
