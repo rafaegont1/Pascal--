@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     // Create a vector of lexemes and print them
     try {
         Lexer lexer;
-        auto& lexemes = lexer.scan_file(argv[1]);
+        const std::vector<Lexeme>& lexemes = lexer.scan_file(argv[1]);
 
         for (const auto& lexeme : lexemes) {
             std::cout << lexeme.str() << std::endl;

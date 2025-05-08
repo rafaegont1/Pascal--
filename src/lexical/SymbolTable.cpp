@@ -38,9 +38,9 @@ static const std::unordered_map<std::string, enum TokenType> s_symbols = {
     // Keywords
     {"program", TT_PROGRAMSYM},
     {"var", TT_VARSYM},
-    {"integer", TT_TYPE_INTEGER},
+    {"integer", TT_TYPE_INT},
     {"real", TT_TYPE_REAL},
-    {"string", TT_TYPE_STRING},
+    {"string", TT_TYPE_STR},
     {"begin", TT_BEGINSYM},
     {"end", TT_ENDSYM},
     {"for", TT_FORSYM},

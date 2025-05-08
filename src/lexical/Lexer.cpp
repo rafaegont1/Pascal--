@@ -203,7 +203,7 @@ Lexeme Lexer::make_lexeme() {
                         "unexpected alphabetical character", lexeme
                     );
                 } else {
-                    lexeme.type = TT_LITERAL_DECIMAL;
+                    lexeme.type = TT_LITERAL_DEC;
                     state = STATE_FINAL;
                 }
                 break;
@@ -220,7 +220,7 @@ Lexeme Lexer::make_lexeme() {
                 } else if ('8' <= c && c <= '9') {
                     throw lexical_error("8 and 9 aren't octal digits", lexeme);
                 } else {
-                    lexeme.type = TT_LITERAL_OCTAL;
+                    lexeme.type = TT_LITERAL_OCT;
                     state = STATE_FINAL;
                 }
                 break;
@@ -258,7 +258,7 @@ Lexeme Lexer::make_lexeme() {
                         "unexpected alphabetical character", lexeme
                     );
                 } else {
-                    lexeme.type = TT_LITERAL_DECIMAL;
+                    lexeme.type = TT_LITERAL_DEC;
                     state = STATE_FINAL;
                 }
                 break;
@@ -397,7 +397,7 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_STRING;
                 } else {
-                    lexeme.type = TT_LITERAL_STRING;
+                    lexeme.type = TT_LITERAL_STR;
                     c = m_file.advance();
                     state = STATE_FINAL;
                 }

@@ -3,7 +3,6 @@
 std::string tt2str(enum TokenType type) {
     switch (type) {
         // Specials
-        case TT_INVALID:           return "INVALID";
         case TT_EOF:               return "EOF";
 
         // Arithmetic operators
@@ -38,9 +37,9 @@ std::string tt2str(enum TokenType type) {
         // Keywords
         case TT_PROGRAMSYM:        return "PROGRAMSYM";
         case TT_VARSYM:            return "VARSYM";
-        case TT_TYPE_INTEGER:      return "TYPE_INTEGER";
+        case TT_TYPE_INT:          return "TYPE_INT";
         case TT_TYPE_REAL:         return "TYPE_REAL";
-        case TT_TYPE_STRING:       return "TYPE_STRING";
+        case TT_TYPE_STR:          return "TYPE_STR";
         case TT_BEGINSYM:          return "BEGINSYM";
         case TT_ENDSYM:            return "ENDSYM";
         case TT_FORSYM:            return "FORSYM";
@@ -59,11 +58,11 @@ std::string tt2str(enum TokenType type) {
 
         // Others
         case TT_IDENT:             return "IDENT";
-        case TT_LITERAL_OCTAL:     return "LITERAL_OCTAL";
-        case TT_LITERAL_DECIMAL:   return "LITERAL_DECIMAL";
+        case TT_LITERAL_OCT:       return "LITERAL_OCT";
+        case TT_LITERAL_DEC:       return "LITERAL_DEC";
         case TT_LITERAL_HEX:       return "LITERAL_HEX";
         case TT_LITERAL_REAL:      return "LITERAL_REAL";
-        case TT_LITERAL_STRING:    return "LITERAL_STRING";
+        case TT_LITERAL_STR:       return "LITERAL_STR";
 
         default: throw std::string("invalid token type");
     }
