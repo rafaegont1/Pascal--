@@ -17,6 +17,7 @@ set(SOURCES
     src/lexical/SymbolTable.cpp
     src/lexical/Lexer.cpp
     src/main.cpp
+    src/syntactic/Parser.cpp
     src/util/File.cpp
 )
 

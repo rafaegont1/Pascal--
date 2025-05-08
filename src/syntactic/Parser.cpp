@@ -1,6 +1,8 @@
 #include "Pascal--/syntactic/Parser.hpp"
 #include "Pascal--/lexical/TokenType.hpp"
 
+#include <iostream> // rascunho
+
 Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexemes(lexemes) {
 }
 
@@ -8,19 +10,22 @@ Parser::~Parser() {
 }
 
 void Parser::start() {
+    proc_function();
 }
 
-inline enum TokenType Parser::current_token_type() {
-    return m_lexemes[m_pos].type;
+inline const Lexeme& Parser::current_lexeme() {
+    return m_lexemes[m_pos];
 }
 
 void Parser::consume(enum TokenType expected) {
-    if (expected == current_token_type()) {
+    if (expected == current_lexeme().type) {
         m_pos++;
     } else {
         throw std::string(
             "syntactic error -> expected " + tt2str(expected) +
-            ", found" + tt2str(current_token_type())
+            ", found " + tt2str(current_lexeme().type) +
+            "\nline: " + std::to_string(current_lexeme().line) +
+            "\ncolumn: " + std::to_string(current_lexeme().column)
         );
     }
 }
@@ -68,11 +73,9 @@ void Parser::proc_listIdent() {
 
 // <restIdentList> -> ',' 'IDENT' <restIdentList> | & ;
 void Parser::proc_restIdentList() {
-    consume(TT_COMMA);
-    consume(TT_IDENT);
-    // WARNING: não sei se precisa desse `if`, mas eu acho que sim, porque
-    // senão vai entrar dentro de uma recursão infinita
-    if (current_token_type() == TT_COMMA) {
+    if (current_lexeme().type == TT_COMMA) {
+        consume(TT_COMMA);
+        consume(TT_IDENT);
         proc_restIdentList();
     }
 }
@@ -80,17 +83,31 @@ void Parser::proc_restIdentList() {
 // <restDeclaration> -> <declaration><restDeclaration> | & ;
 void Parser::proc_restDeclaration() {
     proc_declaration();
-    if (current_token_type() == TT_VARSYM) {
+    if (current_lexeme().type == TT_VARSYM) {
         proc_restDeclaration();
     }
 }
 
 // <type> -> 'integer' | 'real' | 'string' ;
 void Parser::proc_type() {
-    constexpr enum TokenType expected = static_cast<TokenType>(
-        TT_TYPE_INT | TT_TYPE_REAL | TT_TYPE_STR
-    );
-    consume(expected);
+    switch (current_lexeme().type) {
+        case TT_TYPE_INT:
+            consume(TT_TYPE_INT);
+            break;
+
+        case TT_TYPE_REAL:
+            consume(TT_TYPE_REAL);
+            break;
+
+        case TT_TYPE_STR:
+            consume(TT_TYPE_STR);
+            break;
+
+        default:
+            // TODO: jogar um erro namoral aqui
+            throw std::string("DEU PAU");
+            break;
+    }
 }
 
 // ------------------------------------
@@ -108,9 +125,22 @@ void Parser::proc_block() {
 // <stmtList> -> <stmt> <stmtList> | & ;
 void Parser::proc_stmtList() {
     proc_stmt();
-    // NOTE: verificar se esse `if` faz sentido
-    if (current_token_type() == TT_SEMICOLON) {
-        proc_stmtList();
+
+    switch (current_lexeme().type) {
+        case TT_FORSYM:
+        case TT_WHILESYM:
+        case TT_IDENT:
+        case TT_IFSYM:
+        case TT_BEGINSYM:
+        case TT_BREAKSYM:
+        case TT_CONTINUESYM:
+        case TT_SEMICOLON:
+            proc_stmtList();
+            break;
+
+        default:
+            // TODO: jogar um erro namoral aqui
+            throw std::string("DEU PAU");
     }
 }
 
@@ -124,7 +154,7 @@ void Parser::proc_stmtList() {
 //    | 'continue'';'
 //    | ';' ;
 void Parser::proc_stmt() {
-    switch (current_token_type()) {
+    switch (current_lexeme().type) {
         case TT_FORSYM:
             proc_forStmt();
             break;
@@ -164,7 +194,7 @@ void Parser::proc_stmt() {
             // TODO: jogar um erro namoral aqui
             throw std::string("DEU PAU");
     }
-    if (current_token_type() == TT_FORSYM) {
+    if (current_lexeme().type == TT_FORSYM) {
         proc_forStmt();
     }
 }
@@ -187,7 +217,7 @@ void Parser::proc_forStmt() {
 
 // <endFor> -> 'IDENT' | 'NUMint' ;
 void Parser::proc_endFor() {
-    switch (current_token_type()) {
+    switch (current_lexeme().type) {
         case TT_IDENT:
             consume(TT_IDENT);
             break;
@@ -216,7 +246,7 @@ void Parser::proc_endFor() {
 //           | 'readln' '(' 'IDENT' ')' ';'
 //           | 'writeln' '(' <outList> ')' ';' ;
 void Parser::proc_ioStmt() {
-    switch (current_token_type()) {
+    switch (current_lexeme().type) {
         case TT_READSYM:
             consume(TT_READSYM);
             consume(TT_LPAREN);
@@ -263,7 +293,7 @@ void Parser::proc_outList() {
 void Parser::proc_restoOutList() {
     consume(TT_COMMA);
 
-    switch (current_token_type()) {
+    switch (current_lexeme().type) {
         case TT_LITERAL_STR:
         case TT_IDENT:
         case TT_LITERAL_OCT:
@@ -280,7 +310,7 @@ void Parser::proc_restoOutList() {
 
 // <out> -> 'STR' | 'IDENT' | 'NUMint' | 'NUMfloat' ;
 void Parser::proc_out() {
-    switch (current_token_type()) {
+    switch (current_lexeme().type) {
         case TT_LITERAL_STR:
             consume(TT_LITERAL_STR);
             break;
@@ -335,7 +365,7 @@ void Parser::proc_ifStmt() {
 void Parser::proc_elsePart() {
     consume(TT_ELSESYM);
 
-    switch (current_token_type()) {
+    switch (current_lexeme().type) {
         case TT_FORSYM:
         case TT_WHILESYM:
         case TT_IDENT:
@@ -345,6 +375,7 @@ void Parser::proc_elsePart() {
         case TT_CONTINUESYM:
         case TT_SEMICOLON:
             proc_stmt();
+            break;
 
         default:
             // TODO: jogar um erro namoral aqui
@@ -378,7 +409,7 @@ void Parser::proc_or() {
 void Parser::proc_restoOr() {
     consume(TT_OR);
     proc_and();
-    if (current_token_type() == TT_OR) {
+    if (current_lexeme().type == TT_OR) {
         proc_restoOr();
     }
 }
@@ -393,7 +424,7 @@ void Parser::proc_and() {
 void Parser::proc_restoAnd() {
     consume(TT_AND);
     proc_and();
-    if (current_token_type() == TT_AND) {
+    if (current_lexeme().type == TT_AND) {
         proc_restoAnd();
     }
 }
@@ -401,7 +432,7 @@ void Parser::proc_restoAnd() {
 // <not> -> 'not' <not> | <rel> ;
 void Parser::proc_not() {
     consume(TT_NOT);
-    if (current_token_type() == TT_NOT) {
+    if (current_lexeme().type == TT_NOT) {
         proc_not();
     }
 }
@@ -416,14 +447,39 @@ void Parser::proc_rel() {
 //             | '<' <add> | '<=' <add>
 //             | '>' <add> | '>=' <add> | & ;
 void Parser::proc_restoRel() {
-    switch (current_token_type()) {
-        case TT_EQL: consume(TT_EQL); proc_add(); break;
-        case TT_NEQ: consume(TT_NEQ); proc_add(); break;
-        case TT_LSS: consume(TT_LSS); proc_add(); break;
-        case TT_LEQ: consume(TT_LEQ); proc_add(); break;
-        case TT_GTR: consume(TT_GTR); proc_add(); break;
-        case TT_GEQ: consume(TT_GEQ); proc_add(); break;
-        default: break;
+    switch (current_lexeme().type) {
+        case TT_EQL:
+            consume(TT_EQL);
+            proc_add();
+            break;
+
+        case TT_NEQ:
+            consume(TT_NEQ);
+            proc_add();
+            break;
+
+        case TT_LSS:
+            consume(TT_LSS);
+            proc_add();
+            break;
+
+        case TT_LEQ:
+            consume(TT_LEQ);
+            proc_add();
+            break;
+
+        case TT_GTR:
+            consume(TT_GTR);
+            proc_add();
+            break;
+
+        case TT_GEQ:
+            consume(TT_GEQ);
+            proc_add();
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -436,10 +492,21 @@ void Parser::proc_add() {
 // <restoAdd> -> '+' <mult> <restoAdd>
 //             | '-' <mult> <restoAdd> | & ;
 void Parser::proc_restoAdd() {
-    switch (current_token_type()) {
-        case TT_ADD: consume(TT_ADD); proc_mult(); proc_restoAdd(); break;
-        case TT_SUB: consume(TT_SUB); proc_mult(); proc_restoAdd(); break;
-        default: break;
+    switch (current_lexeme().type) {
+        case TT_ADD:
+            consume(TT_ADD);
+            proc_mult();
+            proc_restoAdd();
+            break;
+
+        case TT_SUB:
+            consume(TT_SUB);
+            proc_mult();
+            proc_restoAdd();
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -454,28 +521,59 @@ void Parser::proc_mult() {
 //             |  'mod' <uno> <restoMult> | & ;
 //             |  'div' <uno> <restoMult> | & ;
 void Parser::proc_restoMult() {
-    switch (current_token_type()) {
-        case TT_MUL:      consume(TT_MUL);      proc_uno(); proc_restoMult(); break;
-        case TT_DIV:      consume(TT_DIV);      proc_uno(); proc_restoMult(); break;
-        case TT_MOD:      consume(TT_MOD);      proc_uno(); proc_restoMult(); break;
-        case TT_FLOORDIV: consume(TT_FLOORDIV); proc_uno(); proc_restoMult(); break;
-        default: break;
+    switch (current_lexeme().type) {
+        case TT_MUL:
+            consume(TT_MUL);
+            proc_uno();
+            proc_restoMult();
+            break;
+
+        case TT_DIV:
+            consume(TT_DIV);
+            proc_uno();
+            proc_restoMult();
+            break;
+
+        case TT_MOD:
+            consume(TT_MOD);
+            proc_uno();
+            proc_restoMult();
+            break;
+
+        case TT_FLOORDIV:
+            consume(TT_FLOORDIV);
+            proc_uno();
+            proc_restoMult();
+            break;
+
+        default:
+            break;
     }
 }
 
 // <uno> -> '+' <uno> | '-' <uno> | <fator> ;
 void Parser::proc_uno() {
-    switch (current_token_type()) {
-        case TT_ADD: consume(TT_ADD); proc_uno(); break;
-        case TT_SUB: consume(TT_SUB); proc_uno(); break;
-        default: proc_fator(); break;
+    switch (current_lexeme().type) {
+        case TT_ADD:
+            consume(TT_ADD);
+            proc_uno();
+            break;
+
+        case TT_SUB:
+            consume(TT_SUB);
+            proc_uno();
+            break;
+
+        default:
+            proc_fator();
+            break;
     }
 }
 
 // <fator> -> 'NUMint' | 'NUMfloat'
 //          | 'IDENT'  | '(' <expr> ')' | 'STR' ;
 void Parser::proc_fator() {
-    switch (current_token_type()) {
+    switch (current_lexeme().type) {
         case TT_LITERAL_OCT:
             consume(TT_LITERAL_OCT);
             break;
@@ -501,7 +599,6 @@ void Parser::proc_fator() {
         case TT_LITERAL_STR:
             consume(TT_LITERAL_STR);
             break;
-
 
         default:
             break;

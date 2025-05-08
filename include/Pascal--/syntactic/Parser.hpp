@@ -16,7 +16,7 @@ private:
     const std::vector<Lexeme>& m_lexemes;
     int m_pos = 0;
 
-    inline enum TokenType current_token_type();
+    inline const Lexeme& current_lexeme();
     void consume(enum TokenType type);
 
     // ------------------------------------

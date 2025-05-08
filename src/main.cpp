@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Pascal--/lexical/Lexer.hpp"
+#include "Pascal--/syntactic/Parser.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -12,10 +13,14 @@ int main(int argc, char* argv[]) {
     try {
         Lexer lexer;
         const std::vector<Lexeme>& lexemes = lexer.scan_file(argv[1]);
+        Parser parser(lexemes);
 
-        for (const auto& lexeme : lexemes) {
-            std::cout << lexeme.str() << std::endl;
-        }
+        // print lexemes found within lexer
+        // for (const auto& lexeme : lexemes) {
+        //     std::cout << lexeme.str() << std::endl;
+        // }
+
+        parser.start();
 
     } catch (const std::string& error) {
         std::cerr << "Error: " << error << std::endl;
