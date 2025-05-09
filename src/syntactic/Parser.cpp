@@ -105,7 +105,6 @@ void Parser::proc_type() {
         default:
             // TODO: jogar um erro namoral aqui
             throw std::string("DEU PAU 1: " + current_lexeme().str());
-            break;
     }
 }
 
@@ -612,6 +611,7 @@ void Parser::proc_fator() {
             break;
 
         default:
-            break;
+            // TODO: jogar um erro namoral aqui
+            throw std::string("DEU PAU 6: " + current_lexeme().str());
     }
 }
