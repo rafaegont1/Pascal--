@@ -2,7 +2,7 @@ program equal;
 
 var
   a, b: integer;
-  r: real = 3.;
+  r: real;
 
 begin
   a := 25 div 03;
@@ -14,9 +14,9 @@ begin
   else if (a == b) then
     write ("ok");
 
-  else if (a === b) then
+  else if (a = b) then
     write ("arigato");
 
-  else if (a ==== b) then
+  else if (a == b) then
     write ("rouje");
 end.

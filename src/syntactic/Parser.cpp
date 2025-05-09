@@ -1,5 +1,4 @@
 #include "Pascal--/syntactic/Parser.hpp"
-#include "Pascal--/lexical/TokenType.hpp"
 
 #include <iostream> // rascunho
 
@@ -67,6 +66,7 @@ void Parser::proc_declaration() {
 
 // <listIdent> -> 'IDENT' <restIdentList> ;
 void Parser::proc_listIdent() {
+    // FIXME: tá dando erro aqui
     consume(TT_IDENT);
     proc_restIdentList();
 }
@@ -82,8 +82,8 @@ void Parser::proc_restIdentList() {
 
 // <restDeclaration> -> <declaration><restDeclaration> | & ;
 void Parser::proc_restDeclaration() {
-    proc_declaration();
-    if (current_lexeme().type == TT_VARSYM) {
+    if (current_lexeme().type == TT_IDENT) {
+        proc_declaration();
         proc_restDeclaration();
     }
 }
@@ -105,7 +105,7 @@ void Parser::proc_type() {
 
         default:
             // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU");
+            throw std::string("DEU PAU 1: " + current_lexeme().str());
             break;
     }
 }
@@ -124,10 +124,12 @@ void Parser::proc_block() {
 
 // <stmtList> -> <stmt> <stmtList> | & ;
 void Parser::proc_stmtList() {
-    proc_stmt();
-
     switch (current_lexeme().type) {
         case TT_FORSYM:
+        case TT_READSYM:
+        case TT_WRITESYM:
+        case TT_READLNSYM:
+        case TT_WRITELNSYM:
         case TT_WHILESYM:
         case TT_IDENT:
         case TT_IFSYM:
@@ -135,12 +137,12 @@ void Parser::proc_stmtList() {
         case TT_BREAKSYM:
         case TT_CONTINUESYM:
         case TT_SEMICOLON:
+            proc_stmt();
             proc_stmtList();
             break;
 
         default:
-            // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU");
+            break;
     }
 }
 
@@ -157,6 +159,13 @@ void Parser::proc_stmt() {
     switch (current_lexeme().type) {
         case TT_FORSYM:
             proc_forStmt();
+            break;
+
+        case TT_READSYM:
+        case TT_WRITESYM:
+        case TT_READLNSYM:
+        case TT_WRITELNSYM:
+            proc_ioStmt();
             break;
 
         case TT_WHILESYM:
@@ -192,7 +201,7 @@ void Parser::proc_stmt() {
 
         default:
             // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU");
+            throw std::string("DEU PAU 3: " + current_lexeme().str());
     }
     if (current_lexeme().type == TT_FORSYM) {
         proc_forStmt();
@@ -236,7 +245,7 @@ void Parser::proc_endFor() {
 
         default:
             // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU");
+            throw std::string("DEU PAU 4: " + current_lexeme().str());
     }
 }
 
@@ -291,20 +300,22 @@ void Parser::proc_outList() {
 
 // <restoOutList> -> ',' <outList> | &;
 void Parser::proc_restoOutList() {
-    consume(TT_COMMA);
+    if (current_lexeme().type == TT_COMMA) {
+        consume(TT_COMMA);
 
-    switch (current_lexeme().type) {
-        case TT_LITERAL_STR:
-        case TT_IDENT:
-        case TT_LITERAL_OCT:
-        case TT_LITERAL_DEC:
-        case TT_LITERAL_HEX:
-        case TT_LITERAL_REAL:
-            proc_outList();
-        break;
-
-        default:
+        switch (current_lexeme().type) {
+            case TT_LITERAL_STR:
+            case TT_IDENT:
+            case TT_LITERAL_OCT:
+            case TT_LITERAL_DEC:
+            case TT_LITERAL_HEX:
+            case TT_LITERAL_REAL:
+                proc_outList();
             break;
+
+            default:
+                break;
+        }
     }
 }
 
@@ -363,23 +374,25 @@ void Parser::proc_ifStmt() {
 
 // <elsePart> -> 'else' <stmt> | & ;
 void Parser::proc_elsePart() {
-    consume(TT_ELSESYM);
+    if (current_lexeme().type == TT_ELSESYM) {
+        consume(TT_ELSESYM);
 
-    switch (current_lexeme().type) {
-        case TT_FORSYM:
-        case TT_WHILESYM:
-        case TT_IDENT:
-        case TT_IFSYM:
-        case TT_BEGINSYM:
-        case TT_BREAKSYM:
-        case TT_CONTINUESYM:
-        case TT_SEMICOLON:
-            proc_stmt();
-            break;
+        switch (current_lexeme().type) {
+            case TT_FORSYM:
+            case TT_WHILESYM:
+            case TT_IDENT:
+            case TT_IFSYM:
+            case TT_BEGINSYM:
+            case TT_BREAKSYM:
+            case TT_CONTINUESYM:
+            case TT_SEMICOLON:
+                proc_stmt();
+                break;
 
-        default:
-            // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU");
+            default:
+                // TODO: jogar um erro namoral aqui
+            throw std::string("DEU PAU 5: " + current_lexeme().str());
+        }
     }
 }
 
@@ -407,9 +420,9 @@ void Parser::proc_or() {
 
 // <restoOr> -> 'or' <and> <restoOr> | & ;
 void Parser::proc_restoOr() {
-    consume(TT_OR);
-    proc_and();
     if (current_lexeme().type == TT_OR) {
+        consume(TT_OR);
+        proc_and();
         proc_restoOr();
     }
 }
@@ -422,18 +435,20 @@ void Parser::proc_and() {
 
 // <restoAnd> -> 'and' <not> <restoAnd> | & ;
 void Parser::proc_restoAnd() {
-    consume(TT_AND);
-    proc_and();
     if (current_lexeme().type == TT_AND) {
+        consume(TT_AND);
+        proc_and();
         proc_restoAnd();
     }
 }
 
 // <not> -> 'not' <not> | <rel> ;
 void Parser::proc_not() {
-    consume(TT_NOT);
     if (current_lexeme().type == TT_NOT) {
+        consume(TT_NOT);
         proc_not();
+    } else {
+        proc_rel();
     }
 }
 
