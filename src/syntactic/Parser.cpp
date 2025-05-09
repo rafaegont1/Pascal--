@@ -66,7 +66,6 @@ void Parser::proc_declaration() {
 
 // <listIdent> -> 'IDENT' <restIdentList> ;
 void Parser::proc_listIdent() {
-    // FIXME: tá dando erro aqui
     consume(TT_IDENT);
     proc_restIdentList();
 }
@@ -202,9 +201,6 @@ void Parser::proc_stmt() {
         default:
             // TODO: jogar um erro namoral aqui
             throw std::string("DEU PAU 3: " + current_lexeme().str());
-    }
-    if (current_lexeme().type == TT_FORSYM) {
-        proc_forStmt();
     }
 }
 
@@ -391,7 +387,7 @@ void Parser::proc_elsePart() {
 
             default:
                 // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU 5: " + current_lexeme().str());
+                throw std::string("DEU PAU 5: " + current_lexeme().str());
         }
     }
 }
