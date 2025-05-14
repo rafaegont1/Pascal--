@@ -32,26 +32,26 @@ enum TokenType {
     TT_ASSIGN,          // :=
 
     // Keywords
-    TT_PROGRAMSYM,      // program
-    TT_VARSYM,          // var
+    TT_PROGRAM,         // program
+    TT_VAR,             // var
     TT_TYPE_INT,        // integer
     TT_TYPE_REAL,       // real
     TT_TYPE_STR,        // string
-    TT_BEGINSYM,        // begin
-    TT_ENDSYM,          // end
-    TT_FORSYM,          // for
-    TT_TOSYM,           // to
-    TT_WHILESYM,        // while
-    TT_DOSYM,           // do
-    TT_BREAKSYM,        // break
-    TT_CONTINUESYM,     // continue
-    TT_IFSYM,           // if
-    TT_ELSESYM,         // else
-    TT_THENSYM,         // then
-    TT_WRITESYM,        // write
-    TT_WRITELNSYM,      // writeln
-    TT_READSYM,         // read
-    TT_READLNSYM,       // readln
+    TT_BEGIN,           // begin
+    TT_END,             // end
+    TT_FOR,             // for
+    TT_TO,              // to
+    TT_WHILE,           // while
+    TT_DO,              // do
+    TT_BREAK,           // break
+    TT_CONTINUE,        // continue
+    TT_IF,              // if
+    TT_ELSE,            // else
+    TT_THEN,            // then
+    TT_WRITE,           // write
+    TT_WRITELN,         // writeln
+    TT_READ,            // read
+    TT_READLN,          // readln
 
     // Symbols
     TT_SEMICOLON,       // ;

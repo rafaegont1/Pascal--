@@ -21,6 +21,9 @@ int main(int argc, char* argv[]) {
         // }
 
         parser.start();
+        std::cout
+            << "As análises léxica e sintática não encontraram nenhum erro!"
+            << std::endl;
 
     } catch (const std::string& error) {
         std::cerr << "Error: " << error << std::endl;

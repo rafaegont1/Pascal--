@@ -1,6 +1,6 @@
 #include "Pascal--/syntactic/Parser.hpp"
 
-#include <iostream> // rascunho
+#include <vector>
 
 Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexemes(lexemes) {
 }
@@ -35,13 +35,13 @@ void Parser::consume(enum TokenType expected) {
 
 // <function*> -> 'program' 'IDENT' ';' <declarations> 'begin' <stmtList> 'end' '.' ;
 void Parser::proc_function() {
-    consume(TT_PROGRAMSYM);
+    consume(TT_PROGRAM);
     consume(TT_IDENT);
     consume(TT_SEMICOLON);
     proc_declarations();
-    consume(TT_BEGINSYM);
+    consume(TT_BEGIN);
     proc_stmtList();
-    consume(TT_ENDSYM);
+    consume(TT_END);
     consume(TT_PERIOD);
 }
 
@@ -51,7 +51,7 @@ void Parser::proc_function() {
 
 // <declarations> -> var <declaration> <restDeclaration> ;
 void Parser::proc_declarations() {
-    consume(TT_VARSYM);
+    consume(TT_VAR);
     proc_declaration();
     proc_restDeclaration();
 }
@@ -104,7 +104,7 @@ void Parser::proc_type() {
 
         default:
             // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU 1: " + current_lexeme().str());
+            throw std::string("DEU PAU proc_type(): " + current_lexeme().str());
     }
 }
 
@@ -114,26 +114,26 @@ void Parser::proc_type() {
 
 // <block> -> 'begin' <stmtList> 'end' ';' ;
 void Parser::proc_block() {
-    consume(TT_BEGINSYM);
+    consume(TT_BEGIN);
     proc_stmtList();
-    consume(TT_ENDSYM);
+    consume(TT_END);
     consume(TT_SEMICOLON);
 }
 
 // <stmtList> -> <stmt> <stmtList> | & ;
 void Parser::proc_stmtList() {
     switch (current_lexeme().type) {
-        case TT_FORSYM:
-        case TT_READSYM:
-        case TT_WRITESYM:
-        case TT_READLNSYM:
-        case TT_WRITELNSYM:
-        case TT_WHILESYM:
+        case TT_FOR:
+        case TT_READ:
+        case TT_WRITE:
+        case TT_READLN:
+        case TT_WRITELN:
+        case TT_WHILE:
         case TT_IDENT:
-        case TT_IFSYM:
-        case TT_BEGINSYM:
-        case TT_BREAKSYM:
-        case TT_CONTINUESYM:
+        case TT_IF:
+        case TT_BEGIN:
+        case TT_BREAK:
+        case TT_CONTINUE:
         case TT_SEMICOLON:
             proc_stmt();
             proc_stmtList();
@@ -155,18 +155,18 @@ void Parser::proc_stmtList() {
 //    | ';' ;
 void Parser::proc_stmt() {
     switch (current_lexeme().type) {
-        case TT_FORSYM:
+        case TT_FOR:
             proc_forStmt();
             break;
 
-        case TT_READSYM:
-        case TT_WRITESYM:
-        case TT_READLNSYM:
-        case TT_WRITELNSYM:
+        case TT_READ:
+        case TT_WRITE:
+        case TT_READLN:
+        case TT_WRITELN:
             proc_ioStmt();
             break;
 
-        case TT_WHILESYM:
+        case TT_WHILE:
             proc_whileStmt();
             break;
 
@@ -175,21 +175,21 @@ void Parser::proc_stmt() {
             consume(TT_SEMICOLON);
             break;
 
-        case TT_IFSYM:
+        case TT_IF:
             proc_ifStmt();
             break;
 
-        case TT_BEGINSYM:
+        case TT_BEGIN:
             proc_block();
             break;
 
-        case TT_BREAKSYM:
-            consume(TT_BREAKSYM);
+        case TT_BREAK:
+            consume(TT_BREAK);
             consume(TT_SEMICOLON);
             break;
 
-        case TT_CONTINUESYM:
-            consume(TT_CONTINUESYM);
+        case TT_CONTINUE:
+            consume(TT_CONTINUE);
             consume(TT_SEMICOLON);
             break;
 
@@ -199,7 +199,7 @@ void Parser::proc_stmt() {
 
         default:
             // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU 3: " + current_lexeme().str());
+            throw std::string("DEU PAU proc_stmt(): " + current_lexeme().str());
     }
 }
 
@@ -211,11 +211,11 @@ void Parser::proc_stmt() {
 
 // <forStmt> -> 'for' <atrib> 'to' <endFor> 'do' <stmt> ;
 void Parser::proc_forStmt() {
-    consume(TT_FORSYM);
+    consume(TT_FOR);
     proc_atrib();
-    consume(TT_TOSYM);
+    consume(TT_TO);
     proc_endFor();
-    consume(TT_DOSYM);
+    consume(TT_DO);
     proc_stmt();
 }
 
@@ -240,7 +240,7 @@ void Parser::proc_endFor() {
 
         default:
             // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU 4: " + current_lexeme().str());
+            throw std::string("DEU PAU proc_endFor(): " + current_lexeme().str());
     }
 }
 
@@ -251,39 +251,41 @@ void Parser::proc_endFor() {
 //           | 'writeln' '(' <outList> ')' ';' ;
 void Parser::proc_ioStmt() {
     switch (current_lexeme().type) {
-        case TT_READSYM:
-            consume(TT_READSYM);
+        case TT_READ:
+            consume(TT_READ);
             consume(TT_LPAREN);
             consume(TT_IDENT);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
             break;
 
-        case TT_WRITESYM:
-            consume(TT_WRITESYM);
+        case TT_WRITE:
+            consume(TT_WRITE);
             consume(TT_LPAREN);
             proc_outList();
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
             break;
 
-        case TT_READLNSYM:
-            consume(TT_READLNSYM);
+        case TT_READLN:
+            consume(TT_READLN);
             consume(TT_LPAREN);
             consume(TT_IDENT);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
             break;
 
-        case TT_WRITELNSYM:
-            consume(TT_WRITELNSYM);
+        case TT_WRITELN:
+            consume(TT_WRITELN);
             consume(TT_LPAREN);
             proc_outList();
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
+            break;
 
         default:
-            break;
+            // TODO: jogar um erro namoral aqui
+            throw std::string("DEU PAU proc_ioStmt(): " + current_lexeme().str());
     }
 }
 
@@ -342,7 +344,8 @@ void Parser::proc_out() {
             break;
 
         default:
-            break;
+            // TODO: jogar um erro namoral aqui
+            throw std::string("DEU PAU proc_out(): " + current_lexeme().str());
     }
 }
 
@@ -350,9 +353,9 @@ void Parser::proc_out() {
 
 // <whileStmt> -> 'while' <expr> 'do' <stmt> ;
 void Parser::proc_whileStmt() {
-    consume(TT_WHILESYM);
+    consume(TT_WHILE);
     proc_expr();
-    consume(TT_DOSYM);
+    consume(TT_DO);
     proc_stmt();
 }
 
@@ -360,33 +363,33 @@ void Parser::proc_whileStmt() {
 
 // <ifStmt> -> 'if' <expr> 'then' <stmt> <elsePart> ;
 void Parser::proc_ifStmt() {
-    consume(TT_IFSYM);
+    consume(TT_IF);
     proc_expr();
-    consume(TT_THENSYM);
+    consume(TT_THEN);
     proc_stmt();
     proc_elsePart();
 }
 
 // <elsePart> -> 'else' <stmt> | & ;
 void Parser::proc_elsePart() {
-    if (current_lexeme().type == TT_ELSESYM) {
-        consume(TT_ELSESYM);
+    if (current_lexeme().type == TT_ELSE) {
+        consume(TT_ELSE);
 
         switch (current_lexeme().type) {
-            case TT_FORSYM:
-            case TT_WHILESYM:
+            case TT_FOR:
+            case TT_WHILE:
             case TT_IDENT:
-            case TT_IFSYM:
-            case TT_BEGINSYM:
-            case TT_BREAKSYM:
-            case TT_CONTINUESYM:
+            case TT_IF:
+            case TT_BEGIN:
+            case TT_BREAK:
+            case TT_CONTINUE:
             case TT_SEMICOLON:
                 proc_stmt();
                 break;
 
             default:
                 // TODO: jogar um erro namoral aqui
-                throw std::string("DEU PAU 5: " + current_lexeme().str());
+                throw std::string("DEU PAU proc_elsePart(): " + current_lexeme().str());
         }
     }
 }
@@ -612,6 +615,6 @@ void Parser::proc_fator() {
 
         default:
             // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU 6: " + current_lexeme().str());
+            throw std::string("DEU PAU proc_fator(): " + current_lexeme().str());
     }
 }

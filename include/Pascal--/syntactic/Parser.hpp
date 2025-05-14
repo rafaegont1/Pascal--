@@ -17,7 +17,7 @@ private:
     int m_pos = 0;
 
     inline const Lexeme& current_lexeme();
-    void consume(enum TokenType type);
+    void consume(enum TokenType expected);
 
     // ------------------------------------
     //  main function

@@ -36,26 +36,26 @@ static const std::unordered_map<std::string, enum TokenType> s_symbols = {
     {"\"", TT_QUOTES},
 
     // Keywords
-    {"program", TT_PROGRAMSYM},
-    {"var", TT_VARSYM},
+    {"program", TT_PROGRAM},
+    {"var", TT_VAR},
     {"integer", TT_TYPE_INT},
     {"real", TT_TYPE_REAL},
     {"string", TT_TYPE_STR},
-    {"begin", TT_BEGINSYM},
-    {"end", TT_ENDSYM},
-    {"for", TT_FORSYM},
-    {"to", TT_TOSYM},
-    {"while", TT_WHILESYM},
-    {"do", TT_DOSYM},
-    {"break", TT_BREAKSYM},
-    {"continue", TT_CONTINUESYM},
-    {"if", TT_IFSYM},
-    {"else", TT_ELSESYM},
-    {"then", TT_THENSYM},
-    {"write", TT_WRITESYM},
-    {"writeln", TT_WRITELNSYM},
-    {"read", TT_READSYM},
-    {"readln", TT_READLNSYM}
+    {"begin", TT_BEGIN},
+    {"end", TT_END},
+    {"for", TT_FOR},
+    {"to", TT_TO},
+    {"while", TT_WHILE},
+    {"do", TT_DO},
+    {"break", TT_BREAK},
+    {"continue", TT_CONTINUE},
+    {"if", TT_IF},
+    {"else", TT_ELSE},
+    {"then", TT_THEN},
+    {"write", TT_WRITE},
+    {"writeln", TT_WRITELN},
+    {"read", TT_READ},
+    {"readln", TT_READLN}
 };
 
 bool contains(const std::string& token) {
