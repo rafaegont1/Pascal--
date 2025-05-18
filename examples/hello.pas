@@ -5,5 +5,6 @@ var
   num: integer;
 
 begin
+  num := 2 * +;
   writeln ("Hello, world.");
 end.

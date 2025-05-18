@@ -1,6 +1,7 @@
 #include "Pascal--/syntactic/Parser.hpp"
 
 #include <vector>
+#include <iostream> // rascunho
 
 Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexemes(lexemes) {
 }
@@ -103,8 +104,10 @@ void Parser::proc_type() {
             break;
 
         default:
-            // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU proc_type(): " + current_lexeme().str());
+            throw std::string(
+                "Expected integer, real or string, found \"" +
+                current_lexeme().token + "\""
+            );
     }
 }
 
@@ -198,8 +201,10 @@ void Parser::proc_stmt() {
             break;
 
         default:
-            // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU proc_stmt(): " + current_lexeme().str());
+            throw std::string(
+                "Undefined statement \"" + current_lexeme().token +
+                "\" expected flow control, ; ,break, continue or attribuition"
+            );
     }
 }
 
@@ -239,8 +244,10 @@ void Parser::proc_endFor() {
             break;
 
         default:
-            // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU proc_endFor(): " + current_lexeme().str());
+            throw std::string(
+                "Expected variable or literal value, found: \"" +
+                current_lexeme().token + "\""
+            );
     }
 }
 
@@ -284,8 +291,10 @@ void Parser::proc_ioStmt() {
             break;
 
         default:
-            // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU proc_ioStmt(): " + current_lexeme().str());
+            throw std::string(
+                "Poorly formated Read or Write stament: \"" +
+                current_lexeme().token + "\""
+            );
     }
 }
 
@@ -344,8 +353,10 @@ void Parser::proc_out() {
             break;
 
         default:
-            // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU proc_out(): " + current_lexeme().str());
+            throw std::string(
+                "Invalid output information, expected string, variable or number, found: \"" +
+                current_lexeme().token + "\""
+            );
     }
 }
 
@@ -388,8 +399,9 @@ void Parser::proc_elsePart() {
                 break;
 
             default:
-                // TODO: jogar um erro namoral aqui
-                throw std::string("DEU PAU proc_elsePart(): " + current_lexeme().str());
+                throw std::string(
+                    "Invalid else statment: \"" + current_lexeme().token + "\""
+                );
         }
     }
 }
@@ -614,7 +626,6 @@ void Parser::proc_fator() {
             break;
 
         default:
-            // TODO: jogar um erro namoral aqui
-            throw std::string("DEU PAU proc_fator(): " + current_lexeme().str());
+            throw std::string("Invalid fator: \"" + current_lexeme().token + "\"");
     }
 }
