@@ -64,6 +64,6 @@ std::string tt2str(enum TokenType type) {
         case TT_LITERAL_REAL:     return "LITERAL_REAL";
         case TT_LITERAL_STR:      return "LITERAL_STR";
 
-        default: throw std::string("invalid token type");
+        default:                  return "INVALID_TOKEN";
     }
 }

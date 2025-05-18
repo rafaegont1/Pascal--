@@ -154,6 +154,9 @@ Lexeme Lexer::make_lexeme() {
                     lexeme.column = m_file.column();
                     lexeme.type = SymbolTable::find(lexeme.token);
                     c = m_file.advance();
+                    if (lexeme.type == TT_INVALID) {
+                        throw lexical_error("invalid token", lexeme);
+                    }
                     state = STATE_FINAL;
 
                 // end of file or invalid character
@@ -418,12 +421,10 @@ std::string Lexer::lexical_error(const std::string& message, Lexeme& lexeme) {
     std::string error;
     char c = m_file.peek();
 
-    while (!std::isspace(c)) {
+    while (!std::isspace(c) && !std::ispunct(c)) {
         lexeme.token += (char)c;
         c = m_file.advance();
     }
-
-    error.reserve(128);
 
     error.append("lexical error -> ")
          .append(message)

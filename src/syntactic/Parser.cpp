@@ -1,7 +1,6 @@
 #include "Pascal--/syntactic/Parser.hpp"
 
 #include <vector>
-#include <iostream> // rascunho
 
 Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexemes(lexemes) {
 }
@@ -106,7 +105,7 @@ void Parser::proc_type() {
         default:
             throw std::string(
                 "Expected integer, real or string, found \"" +
-                current_lexeme().token + "\""
+                tt2str(current_lexeme().type) + "\""
             );
     }
 }
@@ -202,7 +201,7 @@ void Parser::proc_stmt() {
 
         default:
             throw std::string(
-                "Undefined statement \"" + current_lexeme().token +
+                "Undefined statement \"" + tt2str(current_lexeme().type) +
                 "\" expected flow control, ; ,break, continue or attribuition"
             );
     }
@@ -245,8 +244,8 @@ void Parser::proc_endFor() {
 
         default:
             throw std::string(
-                "Expected variable or literal value, found: \"" +
-                current_lexeme().token + "\""
+                "Expected variable or literal value, found \"" +
+                tt2str(current_lexeme().type) + "\""
             );
     }
 }
@@ -292,8 +291,8 @@ void Parser::proc_ioStmt() {
 
         default:
             throw std::string(
-                "Poorly formated Read or Write stament: \"" +
-                current_lexeme().token + "\""
+                "Poorly formated Read or Write stament \"" +
+                tt2str(current_lexeme().type) + "\""
             );
     }
 }
@@ -354,8 +353,8 @@ void Parser::proc_out() {
 
         default:
             throw std::string(
-                "Invalid output information, expected string, variable or number, found: \"" +
-                current_lexeme().token + "\""
+                "Invalid output information, expected string, variable or number, found \"" +
+                tt2str(current_lexeme().type) + "\""
             );
     }
 }
@@ -400,7 +399,7 @@ void Parser::proc_elsePart() {
 
             default:
                 throw std::string(
-                    "Invalid else statment: \"" + current_lexeme().token + "\""
+                    "Invalid else statment \"" + tt2str(current_lexeme().type) + "\""
                 );
         }
     }
@@ -626,6 +625,8 @@ void Parser::proc_fator() {
             break;
 
         default:
-            throw std::string("Invalid fator: \"" + current_lexeme().token + "\"");
+            throw std::string(
+                "Invalid fator \"" + tt2str(current_lexeme().type) + "\""
+            );
     }
 }
