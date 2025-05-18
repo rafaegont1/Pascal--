@@ -9,7 +9,6 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Create a vector of lexemes and print them
     try {
         Lexer lexer;
         const std::vector<Lexeme>& lexemes = lexer.scan_file(argv[1]);

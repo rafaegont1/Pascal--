@@ -7,7 +7,7 @@ var
   nome: string;
 begin
   nome := "STEINS-GATE"; //TESTE COM STRING
-  num2 := 12.9;
+  1 := 12.9;
   num := 2 * 2;
   writeln ("Hello, world.");
 end.

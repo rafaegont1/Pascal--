@@ -70,6 +70,8 @@ private:
     void proc_restoMult();
     void proc_uno();
     void proc_fator();
+
+    std::string syntactic_error(const std::string& msg);
 };
 
 #endif // PARSER_HPP

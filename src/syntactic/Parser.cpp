@@ -1,6 +1,7 @@
 #include "Pascal--/syntactic/Parser.hpp"
 
 #include <vector>
+#include <iostream> // rascunho
 
 Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexemes(lexemes) {
 }
@@ -20,12 +21,7 @@ void Parser::consume(enum TokenType expected) {
     if (expected == current_lexeme().type) {
         m_pos++;
     } else {
-        throw std::string(
-            "syntactic error -> expected " + tt2str(expected) +
-            ", found " + tt2str(current_lexeme().type) +
-            "\nline: " + std::to_string(current_lexeme().line) +
-            "\ncolumn: " + std::to_string(current_lexeme().column)
-        );
+        throw syntactic_error("expected " + tt2str(expected) + ", found");
     }
 }
 
@@ -103,10 +99,7 @@ void Parser::proc_type() {
             break;
 
         default:
-            throw std::string(
-                "Expected integer, real or string, found \"" +
-                tt2str(current_lexeme().type) + "\""
-            );
+            throw syntactic_error("Expected integer, real or string, found");
     }
 }
 
@@ -200,9 +193,8 @@ void Parser::proc_stmt() {
             break;
 
         default:
-            throw std::string(
-                "Undefined statement \"" + tt2str(current_lexeme().type) +
-                "\" expected flow control, ; ,break, continue or attribuition"
+            throw syntactic_error(
+                "Undefined statement , expected flow control, ; ,break, continue or attribuition"
             );
     }
 }
@@ -243,10 +235,7 @@ void Parser::proc_endFor() {
             break;
 
         default:
-            throw std::string(
-                "Expected variable or literal value, found \"" +
-                tt2str(current_lexeme().type) + "\""
-            );
+            throw syntactic_error("Expected variable or literal value, found");
     }
 }
 
@@ -290,10 +279,7 @@ void Parser::proc_ioStmt() {
             break;
 
         default:
-            throw std::string(
-                "Poorly formated Read or Write stament \"" +
-                tt2str(current_lexeme().type) + "\""
-            );
+            throw syntactic_error("Poorly formated Read or Write stament");
     }
 }
 
@@ -352,9 +338,8 @@ void Parser::proc_out() {
             break;
 
         default:
-            throw std::string(
-                "Invalid output information, expected string, variable or number, found \"" +
-                tt2str(current_lexeme().type) + "\""
+            throw syntactic_error(
+                "Invalid output information, expected string, variable or number, found"
             );
     }
 }
@@ -398,9 +383,7 @@ void Parser::proc_elsePart() {
                 break;
 
             default:
-                throw std::string(
-                    "Invalid else statment \"" + tt2str(current_lexeme().type) + "\""
-                );
+                throw syntactic_error("Invalid else statment");
         }
     }
 }
@@ -629,8 +612,21 @@ void Parser::proc_fator() {
             break;
 
         default:
-            throw std::string(
-                "Invalid fator \"" + tt2str(current_lexeme().type) + "\""
-            );
+            throw syntactic_error("Invalid fator");
     }
+}
+
+std::string Parser::syntactic_error(const std::string& msg) {
+    std::string error;
+
+    error.append("syntactic error -> ")
+         .append(msg)
+         .append("\n\ttoken: ")
+         .append(current_lexeme().token)
+         .append("\n\tline: ")
+         .append(std::to_string(current_lexeme().line))
+         .append("\n\tcolumn: ")
+         .append(std::to_string(current_lexeme().column));
+
+    return error;
 }
