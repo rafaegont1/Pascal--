@@ -16,9 +16,12 @@ int main(int argc, char* argv[]) {
         Parser parser(lexemes);
 
         // print lexemes found within lexer
-        // for (const auto& lexeme : lexemes) {
-        //     std::cout << lexeme.str() << std::endl;
-        // }
+        std::cout << "LEXEME LIST\n"
+                  << "-----------\n";
+        for (const auto& lexeme : lexemes) {
+            std::cout << lexeme.str() << '\n';
+        }
+        std::cout << std::endl;
 
         parser.start();
         std::cout

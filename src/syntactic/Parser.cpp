@@ -610,6 +610,10 @@ void Parser::proc_fator() {
             consume(TT_LITERAL_HEX);
             break;
 
+        case TT_LITERAL_REAL:
+            consume(TT_LITERAL_REAL);
+            break;
+
         case TT_IDENT:
             consume(TT_IDENT);
             break;
