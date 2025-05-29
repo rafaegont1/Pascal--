@@ -1,9 +1,10 @@
 #include "Pascal--/syntactic/Parser.hpp"
+#include "Pascal--/util/exception.hpp"
 
 #include <vector>
-#include <iostream> // rascunho
+#include <format>
 
-Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexemes(lexemes) {
+Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexeme(lexemes.begin()) {
 }
 
 Parser::~Parser() {
@@ -11,17 +12,17 @@ Parser::~Parser() {
 
 void Parser::start() {
     proc_function();
-}
-
-inline const Lexeme& Parser::current_lexeme() {
-    return m_lexemes[m_pos];
+    consume(TT_EOF);
 }
 
 void Parser::consume(enum TokenType expected) {
-    if (expected == current_lexeme().type) {
-        m_pos++;
+    if (expected == m_lexeme->type) {
+        m_lexeme++;
     } else {
-        throw syntactic_error("expected " + tt2str(expected) + ", found");
+        throw SyntaxError(
+            std::format("expected '{}', found '{}'", tt2str(expected), m_lexeme->token),
+            m_lexeme->line, m_lexeme->column
+        );
     }
 }
 
@@ -68,7 +69,7 @@ void Parser::proc_listIdent() {
 
 // <restIdentList> -> ',' 'IDENT' <restIdentList> | & ;
 void Parser::proc_restIdentList() {
-    if (current_lexeme().type == TT_COMMA) {
+    if (m_lexeme->type == TT_COMMA) {
         consume(TT_COMMA);
         consume(TT_IDENT);
         proc_restIdentList();
@@ -77,7 +78,7 @@ void Parser::proc_restIdentList() {
 
 // <restDeclaration> -> <declaration><restDeclaration> | & ;
 void Parser::proc_restDeclaration() {
-    if (current_lexeme().type == TT_IDENT) {
+    if (m_lexeme->type == TT_IDENT) {
         proc_declaration();
         proc_restDeclaration();
     }
@@ -85,7 +86,7 @@ void Parser::proc_restDeclaration() {
 
 // <type> -> 'integer' | 'real' | 'string' ;
 void Parser::proc_type() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_TYPE_INT:
             consume(TT_TYPE_INT);
             break;
@@ -99,7 +100,10 @@ void Parser::proc_type() {
             break;
 
         default:
-            throw syntactic_error("Expected integer, real or string, found");
+            throw SyntaxError(
+                "Expected integer, real or string, found",
+                m_lexeme->line, m_lexeme->column
+            );
     }
 }
 
@@ -117,7 +121,7 @@ void Parser::proc_block() {
 
 // <stmtList> -> <stmt> <stmtList> | & ;
 void Parser::proc_stmtList() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_FOR:
         case TT_READ:
         case TT_WRITE:
@@ -149,7 +153,7 @@ void Parser::proc_stmtList() {
 //    | 'continue'';'
 //    | ';' ;
 void Parser::proc_stmt() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_FOR:
             proc_forStmt();
             break;
@@ -193,8 +197,9 @@ void Parser::proc_stmt() {
             break;
 
         default:
-            throw syntactic_error(
-                "Undefined statement , expected flow control, ; ,break, continue or attribuition"
+            throw SyntaxError(
+                "Undefined statement , expected flow control, ; ,break, continue or attribuition",
+                m_lexeme->line, m_lexeme->column
             );
     }
 }
@@ -217,7 +222,7 @@ void Parser::proc_forStmt() {
 
 // <endFor> -> 'IDENT' | 'NUMint' ;
 void Parser::proc_endFor() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_IDENT:
             consume(TT_IDENT);
             break;
@@ -235,7 +240,10 @@ void Parser::proc_endFor() {
             break;
 
         default:
-            throw syntactic_error("Expected variable or literal value, found");
+            throw SyntaxError(
+                "Expected variable or literal value, found",
+                m_lexeme->line, m_lexeme->column
+            );
     }
 }
 
@@ -245,7 +253,7 @@ void Parser::proc_endFor() {
 //           | 'readln' '(' 'IDENT' ')' ';'
 //           | 'writeln' '(' <outList> ')' ';' ;
 void Parser::proc_ioStmt() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_READ:
             consume(TT_READ);
             consume(TT_LPAREN);
@@ -279,7 +287,10 @@ void Parser::proc_ioStmt() {
             break;
 
         default:
-            throw syntactic_error("Poorly formated Read or Write stament");
+            throw SyntaxError(
+                "Poorly formated Read or Write stament",
+                m_lexeme->line, m_lexeme->column
+            );
     }
 }
 
@@ -291,10 +302,10 @@ void Parser::proc_outList() {
 
 // <restoOutList> -> ',' <outList> | &;
 void Parser::proc_restoOutList() {
-    if (current_lexeme().type == TT_COMMA) {
+    if (m_lexeme->type == TT_COMMA) {
         consume(TT_COMMA);
 
-        switch (current_lexeme().type) {
+        switch (m_lexeme->type) {
             case TT_LITERAL_STR:
             case TT_IDENT:
             case TT_LITERAL_OCT:
@@ -312,7 +323,7 @@ void Parser::proc_restoOutList() {
 
 // <out> -> 'STR' | 'IDENT' | 'NUMint' | 'NUMfloat' ;
 void Parser::proc_out() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_LITERAL_STR:
             consume(TT_LITERAL_STR);
             break;
@@ -338,8 +349,9 @@ void Parser::proc_out() {
             break;
 
         default:
-            throw syntactic_error(
-                "Invalid output information, expected string, variable or number, found"
+            throw SyntaxError(
+                "Invalid output information, expected string, variable or number, found",
+                m_lexeme->line, m_lexeme->column
             );
     }
 }
@@ -367,10 +379,10 @@ void Parser::proc_ifStmt() {
 
 // <elsePart> -> 'else' <stmt> | & ;
 void Parser::proc_elsePart() {
-    if (current_lexeme().type == TT_ELSE) {
+    if (m_lexeme->type == TT_ELSE) {
         consume(TT_ELSE);
 
-        switch (current_lexeme().type) {
+        switch (m_lexeme->type) {
             case TT_FOR:
             case TT_WHILE:
             case TT_IDENT:
@@ -383,7 +395,10 @@ void Parser::proc_elsePart() {
                 break;
 
             default:
-                throw syntactic_error("Invalid else statment");
+            throw SyntaxError(
+                "Invalid else statment",
+                m_lexeme->line, m_lexeme->column
+            );
         }
     }
 }
@@ -412,7 +427,7 @@ void Parser::proc_or() {
 
 // <restoOr> -> 'or' <and> <restoOr> | & ;
 void Parser::proc_restoOr() {
-    if (current_lexeme().type == TT_OR) {
+    if (m_lexeme->type == TT_OR) {
         consume(TT_OR);
         proc_and();
         proc_restoOr();
@@ -427,7 +442,7 @@ void Parser::proc_and() {
 
 // <restoAnd> -> 'and' <not> <restoAnd> | & ;
 void Parser::proc_restoAnd() {
-    if (current_lexeme().type == TT_AND) {
+    if (m_lexeme->type == TT_AND) {
         consume(TT_AND);
         proc_and();
         proc_restoAnd();
@@ -436,7 +451,7 @@ void Parser::proc_restoAnd() {
 
 // <not> -> 'not' <not> | <rel> ;
 void Parser::proc_not() {
-    if (current_lexeme().type == TT_NOT) {
+    if (m_lexeme->type == TT_NOT) {
         consume(TT_NOT);
         proc_not();
     } else {
@@ -454,7 +469,7 @@ void Parser::proc_rel() {
 //             | '<' <add> | '<=' <add>
 //             | '>' <add> | '>=' <add> | & ;
 void Parser::proc_restoRel() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_EQL:
             consume(TT_EQL);
             proc_add();
@@ -499,7 +514,7 @@ void Parser::proc_add() {
 // <restoAdd> -> '+' <mult> <restoAdd>
 //             | '-' <mult> <restoAdd> | & ;
 void Parser::proc_restoAdd() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_ADD:
             consume(TT_ADD);
             proc_mult();
@@ -528,7 +543,7 @@ void Parser::proc_mult() {
 //             |  'mod' <uno> <restoMult> | & ;
 //             |  'div' <uno> <restoMult> | & ;
 void Parser::proc_restoMult() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_MUL:
             consume(TT_MUL);
             proc_uno();
@@ -560,7 +575,7 @@ void Parser::proc_restoMult() {
 
 // <uno> -> '+' <uno> | '-' <uno> | <fator> ;
 void Parser::proc_uno() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_ADD:
             consume(TT_ADD);
             proc_uno();
@@ -580,7 +595,7 @@ void Parser::proc_uno() {
 // <fator> -> 'NUMint' | 'NUMfloat'
 //          | 'IDENT'  | '(' <expr> ')' | 'STR' ;
 void Parser::proc_fator() {
-    switch (current_lexeme().type) {
+    switch (m_lexeme->type) {
         case TT_LITERAL_OCT:
             consume(TT_LITERAL_OCT);
             break;
@@ -612,21 +627,9 @@ void Parser::proc_fator() {
             break;
 
         default:
-            throw syntactic_error("Invalid fator");
+            throw SyntaxError(
+                "Invalid fator",
+                m_lexeme->line, m_lexeme->column
+            );
     }
-}
-
-std::string Parser::syntactic_error(const std::string& msg) {
-    std::string error;
-
-    error.append("syntactic error -> ")
-         .append(msg)
-         .append("\n\ttoken: ")
-         .append(current_lexeme().token)
-         .append("\n\tline: ")
-         .append(std::to_string(current_lexeme().line))
-         .append("\n\tcolumn: ")
-         .append(std::to_string(current_lexeme().column));
-
-    return error;
 }

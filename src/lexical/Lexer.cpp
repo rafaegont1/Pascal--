@@ -1,10 +1,11 @@
 #include "Pascal--/lexical/Lexer.hpp"
 
+#include <format>
 #include <cctype>
-#include <iostream>
-#include <string>
 #include "Pascal--/lexical/TokenType.hpp"
+#include "Pascal--/lexical/SymbolTable.hpp"
 #include "Pascal--/util/File.hpp"
+#include "Pascal--/util/exception.hpp"
 
 enum State {
     STATE_INITIAL,
@@ -32,14 +33,12 @@ Lexer::~Lexer() {
 }
 
 const std::vector<Lexeme>& Lexer::scan_file(const char* filename) {
+    Lexeme lexeme;
     m_file.open(filename);
 
     while (!m_file.is_at_EOF()) {
-        Lexeme lexeme = make_lexeme();
-
-        if (lexeme.type != TT_EOF) {
-            m_lexemes.push_back(std::move(lexeme));
-        }
+        lexeme = make_lexeme();
+        m_lexemes.push_back(std::move(lexeme));
     }
 
     m_file.close();
@@ -155,7 +154,10 @@ Lexeme Lexer::make_lexeme() {
                     lexeme.type = SymbolTable::find(lexeme.token);
                     c = m_file.advance();
                     if (lexeme.type == TT_INVALID) {
-                        throw lexical_error("invalid token", lexeme);
+                        throw LexicalError(
+                            "invalid token",
+                            lexeme.line, lexeme.column
+                        );
                     }
                     state = STATE_FINAL;
 
@@ -167,7 +169,10 @@ Lexeme Lexer::make_lexeme() {
                         lexeme.type = TT_EOF;
                         state = STATE_FINAL;
                     } else {
-                        throw lexical_error("invalid token", lexeme);
+                        throw LexicalError(
+                            "invalid token",
+                            lexeme.line, lexeme.column
+                        );
                     }
                 }
                 break;
@@ -200,10 +205,14 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_REAL;
                 } else if ('8' <= c && c <= '9') {
-                    throw lexical_error("8 and 9 aren't octal digits", lexeme);
+                    throw LexicalError(
+                        "8 and 9 aren't octal digits",
+                        lexeme.line, lexeme.column
+                    );
                 } else if (std::isalpha(c)) {
-                    throw lexical_error(
-                        "unexpected alphabetical character", lexeme
+                    throw LexicalError(
+                        "unexpected alphabetical character",
+                        lexeme.line, lexeme.column
                     );
                 } else {
                     lexeme.type = TT_LITERAL_DEC;
@@ -217,11 +226,15 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_OCTAL;
                 } else if (std::isalpha(c)) {
-                    throw lexical_error(
-                        "unexpected alphabetical character", lexeme
+                    throw LexicalError(
+                        "unexpected alphabetical character",
+                        lexeme.line, lexeme.column
                     );
                 } else if ('8' <= c && c <= '9') {
-                    throw lexical_error("8 and 9 aren't octal digits", lexeme);
+                    throw LexicalError(
+                        "8 and 9 aren't octal digits",
+                        lexeme.line, lexeme.column
+                    );
                 } else {
                     lexeme.type = TT_LITERAL_OCT;
                     state = STATE_FINAL;
@@ -234,12 +247,14 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_HEX;
                 } else if ('a' <= c && c <= 'f') {
-                    throw lexical_error(
-                        "hexadecimals must use upper case letters", lexeme
+                    throw LexicalError(
+                        "hexadecimals must use upper case letters",
+                        lexeme.line, lexeme.column
                     );
                 } else if (std::isalpha(c)) {
-                    throw lexical_error(
-                        "unexpected alphabetical character", lexeme
+                    throw LexicalError(
+                        "unexpected alphabetical character",
+                        lexeme.line, lexeme.column
                     );
                 } else {
                     lexeme.type = TT_LITERAL_HEX;
@@ -257,8 +272,9 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_REAL;
                 } else if (std::isalpha(c)) {
-                    throw lexical_error(
-                        "unexpected alphabetical character", lexeme
+                    throw LexicalError(
+                        "unexpected alphabetical character",
+                        lexeme.line, lexeme.column
                     );
                 } else {
                     lexeme.type = TT_LITERAL_DEC;
@@ -272,11 +288,15 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_REAL;
                 } else if (std::isalpha(c)) {
-                    throw lexical_error(
-                        "unexpected alphabetical character", lexeme
+                    throw LexicalError(
+                        "unexpected alphabetical character",
+                        lexeme.line, lexeme.column
                     );
                 } else if (c == '.') {
-                    throw lexical_error("more than one period", lexeme);
+                    throw LexicalError(
+                        "real number with more than one period",
+                        lexeme.line, lexeme.column
+                    );
                 } else {
                     lexeme.token += '0';
                     lexeme.type = TT_LITERAL_REAL;
@@ -314,8 +334,9 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_INITIAL;
                 } else if (c == '\0') {
-                    throw lexical_error(
-                        "end of file before closing multi-line comment", lexeme
+                    throw LexicalError(
+                        "end of file before closing multi-line comment",
+                        lexeme.line, lexeme.column
                     );
                 } else {
                     c = m_file.advance();
@@ -378,19 +399,20 @@ Lexeme Lexer::make_lexeme() {
 
             case STATE_STRING:
                 if (c == '\n') {
-                    throw lexical_error(
+                    throw LexicalError(
                         "new line while trying to tokenize string literal",
-                        lexeme
+                        lexeme.line, lexeme.column
                     );
-                } else if (lexeme.token.back() == '\\') {
+                } else if (!lexeme.token.empty() && lexeme.token.back() == '\\') {
                     switch (c) {
                         case 'n':  lexeme.token.back() = '\n'; break;
                         case 't':  lexeme.token.back() = '\t'; break;
                         case 'r':  lexeme.token.back() = '\r'; break;
                         case '\\': lexeme.token.back() = '\\'; break;
                         case '\"': lexeme.token.back() = '\"'; break;
-                        default:   throw lexical_error(
-                            "not defined escape code", lexeme
+                        default:   throw LexicalError(
+                            "not defined escape code",
+                            lexeme.line, lexeme.column
                         );
                     }
                     c = m_file.advance();
@@ -407,33 +429,11 @@ Lexeme Lexer::make_lexeme() {
                 break;
 
             default:
-                throw std::string(
-                    "lexical error -> invalid state number " +
-                    std::to_string(state)
+                throw std::format(
+                    "invalid '{}' state number in lexer", std::to_string(state)
                 );
         }
     }
 
     return lexeme;
-}
-
-std::string Lexer::lexical_error(const std::string& message, Lexeme& lexeme) {
-    std::string error;
-    char c = m_file.peek();
-
-    while (!std::isspace(c) && !std::ispunct(c)) {
-        lexeme.token += (char)c;
-        c = m_file.advance();
-    }
-
-    error.append("lexical error -> ")
-         .append(message)
-         .append("\n\ttoken: ")
-         .append(lexeme.token)
-         .append("\n\tline: ")
-         .append(std::to_string(lexeme.line))
-         .append("\n\tcolumn: ")
-         .append(std::to_string(lexeme.column));
-
-    return error;
 }

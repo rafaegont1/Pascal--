@@ -1,34 +1,44 @@
-#include <iostream>
+#include <print>
 
 #include "Pascal--/lexical/Lexer.hpp"
 #include "Pascal--/syntactic/Parser.hpp"
+#include "Pascal--/util/exception.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        std::cout << "Usage: " << argv[0] << " <program>" << std::endl;
+        std::println("Usage: {} <program>", argv[0]);
         exit(EXIT_FAILURE);
     }
 
+    const char* filename = argv[1];
+
     try {
         Lexer lexer;
-        const std::vector<Lexeme>& lexemes = lexer.scan_file(argv[1]);
+        const std::vector<Lexeme>& lexemes = lexer.scan_file(filename);
         Parser parser(lexemes);
 
         // print lexemes found within lexer
-        std::cout << "LEXEME LIST\n"
-                  << "-----------\n";
+        std::println("LEXEME LIST");
+        std::println("-----------");
         for (const auto& lexeme : lexemes) {
-            std::cout << lexeme.str() << '\n';
+            std::println("{}", lexeme.str());
         }
-        std::cout << std::endl;
+        std::println("");
 
         parser.start();
-        std::cout
-            << "As análises léxica e sintática não encontraram nenhum erro!"
-            << std::endl;
+        std::println("None errors were found!");
 
-    } catch (const std::string& error) {
-        std::cerr << "Error: " << error << std::endl;
+    } catch (const LexicalError& e) {
+        std::println("Lexical Error at {}:{}: {}", e.line(), e.column(), e.what());
+        exit(EXIT_FAILURE);
+
+    } catch (const SyntaxError& e) {
+        std::println("Syntax Error at {}:{}: {}", e.line(), e.column(), e.what());
+        exit(EXIT_FAILURE);
+
+    } catch (const std::exception& e) {
+        std::println(stderr, "Error: {}", e.what());
+        exit(EXIT_FAILURE);
     }
 
     return 0;

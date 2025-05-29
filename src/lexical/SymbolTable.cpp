@@ -33,7 +33,7 @@ static const std::unordered_map<std::string, enum TokenType> s_symbols = {
     {":", TT_COLON},
     {"(", TT_LPAREN},
     {")", TT_RPAREN},
-    {"\"", TT_QUOTES},
+    {"\"", TT_QUOTE},
 
     // Keywords
     {"program", TT_PROGRAM},

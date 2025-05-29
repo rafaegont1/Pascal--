@@ -13,10 +13,8 @@ public:
     void start();
 
 private:
-    const std::vector<Lexeme>& m_lexemes;
-    int m_pos = 0;
+    std::vector<Lexeme>::const_iterator m_lexeme;
 
-    inline const Lexeme& current_lexeme();
     void consume(enum TokenType expected);
 
     // ------------------------------------
@@ -70,8 +68,6 @@ private:
     void proc_restoMult();
     void proc_uno();
     void proc_fator();
-
-    std::string syntactic_error(const std::string& msg);
 };
 
 #endif // PARSER_HPP

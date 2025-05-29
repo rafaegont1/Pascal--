@@ -42,10 +42,9 @@ static const char* get_text(const char* filename) {
 }
 
 void File::open(const char* filename) {
-    const char* buffer = get_text(filename);
-
-    m_start = buffer;
-    m_current = buffer;
+    close();
+    m_start = get_text(filename);
+    m_current = m_start;
     m_line = 1;
     m_column = 1;
 }

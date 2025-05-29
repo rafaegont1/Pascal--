@@ -60,7 +60,7 @@ enum TokenType {
     TT_COLON,           // :
     TT_LPAREN,          // (
     TT_RPAREN,          // )
-    TT_QUOTES,          // "
+    TT_QUOTE,           // "
 
     // Literals
     TT_LITERAL_OCT,
