@@ -4,6 +4,9 @@
 #include <vector>
 #include "Pascal--/lexical/Lexeme.hpp"
 #include "Pascal--/lexical/TokenType.hpp"
+#include "Pascal--/syntactic/IntermediateCode.hpp"
+#include <vector>
+#include <string>
 
 class Parser {
 public:
@@ -11,9 +14,23 @@ public:
     virtual ~Parser();
 
     void start();
+    // Métodos para obter e imprimir o código intermediário
+    const IntermediateCode& getIntermediateCode() const { return m_intermediateCode; }
+    void printIntermediateCode() const { m_intermediateCode.printCode(); }
 
 private:
     std::vector<Lexeme>::const_iterator m_lexeme;
+    IntermediateCode m_intermediateCode;
+    std::vector<std::string> m_expressionStack;
+    int m_tempCounter = 0;
+    int m_labelCounter = 0;
+
+    // Métodos auxiliares para geração de código intermediário
+    std::string popExpression();
+    void pushExpression(const std::string& expr);
+    std::string generateTemp();
+    std::string generateLabel();
+    std::string generateEndLabel();
 
     void consume(enum TokenType expected);
 
@@ -44,12 +61,12 @@ private:
     void proc_endFor();
     // IO commands
     void proc_ioStmt();
-    void proc_outList();
+    void proc_outList(const std::string& writeType = "WRITE");
     void proc_restoOutList();
-    void proc_out();
+    void proc_out(const std::string& writeType = "WRITE");
     void proc_whileStmt();
-    void proc_ifStmt();
-    void proc_elsePart();
+    void proc_ifStmt(const std::string& endLabel = "");
+    void proc_elsePart(const std::string& endLabel = "");
     // ------------------------------
     //  expressions
     // ------------------------------

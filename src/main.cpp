@@ -1,4 +1,4 @@
-#include <print>
+#include <iostream>
 
 #include "Pascal--/lexical/Lexer.hpp"
 #include "Pascal--/syntactic/Parser.hpp"
@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        std::println("Usage: {} <program>", argv[0]);
+        std::cout << "Usage: " << argv[0] << " <program>" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -18,26 +18,32 @@ int main(int argc, char* argv[]) {
         Parser parser(lexemes);
 
         // print lexemes found within lexer
-        std::println("LEXEME LIST");
-        std::println("-----------");
+        std::cout << "LEXEME LIST" << std::endl;
+        std::cout << "-----------" << std::endl;
         for (const auto& lexeme : lexemes) {
-            std::println("{}", lexeme.str());
+            std::cout << lexeme.str() << std::endl;
         }
-        std::println("");
+        std::cout << "" << std::endl;
 
         parser.start();
-        std::println("None errors were found!");
+        std::cout << "None errors were found!" << std::endl;
+        
+        // Print intermediate code
+        std::cout << "" << std::endl;
+        std::cout << "INTERMEDIATE CODE" << std::endl;
+        std::cout << "=================" << std::endl;
+        parser.printIntermediateCode();
 
     } catch (const LexicalError& e) {
-        std::println("Lexical Error at {}:{}: {}", e.line(), e.column(), e.what());
+        std::cout << "Lexical Error at " << e.line() << ":" << e.column() << ": " << e.what() << std::endl;
         exit(EXIT_FAILURE);
 
     } catch (const SyntaxError& e) {
-        std::println("Syntax Error at {}:{}: {}", e.line(), e.column(), e.what());
+        std::cout << "Syntax Error at " << e.line() << ":" << e.column() << ": " << e.what() << std::endl;
         exit(EXIT_FAILURE);
 
     } catch (const std::exception& e) {
-        std::println(stderr, "Error: {}", e.what());
+        std::cerr << "Error: " << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
 
