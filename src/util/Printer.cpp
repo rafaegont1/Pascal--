@@ -14,11 +14,11 @@ void Printer::printLexemes(const std::vector<Lexeme>& lexemes) {
 void Printer::printCommands(const std::vector<Command>& commands) {
     std::cout << "COMMANDS" << std::endl;
     std::cout << "========" << std::endl;
-    
+
     for (size_t i = 0; i < commands.size(); ++i) {
         const auto& cmd = commands[i];
         std::cout << i << ": ";
-        
+
         // Print mnemonic
         switch (cmd.mnemonic) {
             case Command::Mnemonic::ADD: std::cout << "ADD"; break;
@@ -42,10 +42,10 @@ void Printer::printCommands(const std::vector<Command>& commands) {
             case Command::Mnemonic::CALL: std::cout << "CALL"; break;
             case Command::Mnemonic::LABEL: std::cout << "LABEL"; break;
         }
-        
+
         // Print operands
         std::cout << " ";
-        
+
         // Print dst
         try {
             std::visit([](const auto& arg) {
@@ -64,9 +64,9 @@ void Printer::printCommands(const std::vector<Command>& commands) {
         } catch (const std::exception& e) {
             std::cout << "ERROR: " << e.what();
         }
-        
+
         std::cout << ", ";
-        
+
         // Print src1
         try {
             std::visit([](const auto& arg) {
@@ -92,9 +92,9 @@ void Printer::printCommands(const std::vector<Command>& commands) {
         } catch (const std::exception& e) {
             std::cout << "ERROR: " << e.what();
         }
-        
+
         std::cout << ", ";
-        
+
         // Print src2
         try {
             std::visit([](const auto& arg) {
@@ -120,7 +120,7 @@ void Printer::printCommands(const std::vector<Command>& commands) {
         } catch (const std::exception& e) {
             std::cout << "ERROR: " << e.what();
         }
-        
+
         std::cout << std::endl;
     }
 }
@@ -153,4 +153,4 @@ std::string Printer::varTypeToString(VarType type) {
         case VarType::STRING: return "string";
         default: return "unknown";
     }
-} 
+}

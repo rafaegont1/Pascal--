@@ -25,19 +25,19 @@ int main(int argc, char* argv[]) {
         // Step 2: Parsing and Code Generation
         Parser parser(lexemes);
         parser.start();
-        
+
         if (parser.hasTypeErrors()) {
             std::cout << "Type errors found during parsing, but continuing to show generated commands..." << std::endl;
         } else {
             std::cout << "No errors were found!" << std::endl;
         }
-        
+
         // Print variable types
         Printer::printVariableTypes(parser.getVariableTypes());
-        
+
         // Print generated commands
         Printer::printCommands(parser.getCommands());
-        
+
         // Show type errors if any occurred
         if (parser.hasTypeErrors()) {
             Printer::printTypeErrors(parser.getTypeErrors());
@@ -47,10 +47,10 @@ int main(int argc, char* argv[]) {
             std::cout << "" << std::endl;
             std::cout << "EXECUTION" << std::endl;
             std::cout << "=========" << std::endl;
-            
+
             Interpreter interpreter;
             interpreter.execute(parser.getCommands(), parser.getVariableTypes());
-            
+
             // Print final state
             interpreter.printState();
         }

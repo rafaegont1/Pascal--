@@ -10,24 +10,24 @@ void Interpreter::execute(const std::vector<Command>& commands) {
     execute(commands, std::unordered_map<std::string, VariableInfo>{});
 }
 
-void Interpreter::execute(const std::vector<Command>& commands, 
+void Interpreter::execute(const std::vector<Command>& commands,
                                const std::unordered_map<std::string, VariableInfo>& variableTypes) {
     m_variables.clear();
     m_labels.clear();
     m_variableTypes = variableTypes;
-    
+
     // Build label map for jumps
     buildLabelMap(commands);
-    
+
     // Execute commands
     for (auto current = commands.begin(); current != commands.end(); ++current) {
         const Command& cmd = *current;
-        
+
         switch (cmd.mnemonic) {
             case Command::Mnemonic::ASSIGN:
                 executeAssignment(cmd);
                 break;
-                
+
             case Command::Mnemonic::ADD:
             case Command::Mnemonic::SUB:
             case Command::Mnemonic::MUL:
@@ -36,7 +36,7 @@ void Interpreter::execute(const std::vector<Command>& commands,
             case Command::Mnemonic::IDIV:
                 executeArithmetic(cmd);
                 break;
-                
+
             case Command::Mnemonic::EQL:
             case Command::Mnemonic::NEQ:
             case Command::Mnemonic::LSS:
@@ -45,19 +45,19 @@ void Interpreter::execute(const std::vector<Command>& commands,
             case Command::Mnemonic::GEQ:
                 executeComparison(cmd);
                 break;
-                
+
             case Command::Mnemonic::AND:
             case Command::Mnemonic::OR:
             case Command::Mnemonic::NOT:
                 executeLogical(cmd);
                 break;
-                
+
             case Command::Mnemonic::IF:
             case Command::Mnemonic::JMP:
             case Command::Mnemonic::LABEL:
                 executeControlFlow(cmd, current);
                 break;
-                
+
             case Command::Mnemonic::CALL:
                 executeIO(cmd);
                 break;
@@ -77,7 +77,7 @@ void Interpreter::buildLabelMap(const std::vector<Command>& commands) {
 Interpreter::VarValue Interpreter::resolveOperand(const Command::Source& operand) {
     return std::visit([this](const auto& arg) -> VarValue {
         using T = std::decay_t<decltype(arg)>;
-        
+
         if constexpr (std::is_same_v<T, std::string>) {
             // Check if it's a variable name
             auto it = m_variables.find(arg);
@@ -85,12 +85,12 @@ Interpreter::VarValue Interpreter::resolveOperand(const Command::Source& operand
                 return it->second;
             }
             // If not found, try to parse as number first
-            
+
             // Check if it looks like a number first
             bool hasDigit = false;
             bool hasDot = false;
             bool isValidNumber = true;
-            
+
             for (char c : arg) {
                 if (std::isdigit(c)) {
                     hasDigit = true;
@@ -104,7 +104,7 @@ Interpreter::VarValue Interpreter::resolveOperand(const Command::Source& operand
                     break;
                 }
             }
-            
+
             if (isValidNumber && hasDigit) {
                 try {
                     if (hasDot) {
@@ -144,7 +144,7 @@ void Interpreter::validateAssignment(const std::string& varName, const VarValue&
 bool Interpreter::isTypeCompatible(VarType expectedType, const VarValue& value) {
     return std::visit([expectedType](const auto& val) -> bool {
         using T = std::decay_t<decltype(val)>;
-        
+
         if constexpr (std::is_same_v<T, int64_t>) {
             return expectedType == VarType::INTEGER || expectedType == VarType::REAL;
         } else if constexpr (std::is_same_v<T, double>) {
@@ -160,7 +160,7 @@ bool Interpreter::isTypeCompatible(VarType expectedType, const VarValue& value) 
 void Interpreter::executeAssignment(const Command& cmd) {
     const std::string& varName = std::get<std::string>(cmd.dst);
     VarValue value = resolveOperand(cmd.src1);
-    
+
     validateAssignment(varName, value);
     m_variables[varName] = value;
 }
@@ -169,7 +169,7 @@ void Interpreter::executeArithmetic(const Command& cmd) {
     const std::string& resultVar = std::get<std::string>(cmd.dst);
     VarValue left = resolveOperand(cmd.src1);
     VarValue right = resolveOperand(cmd.src2);
-    
+
     VarValue result;
     switch (cmd.mnemonic) {
         case Command::Mnemonic::ADD:
@@ -193,7 +193,7 @@ void Interpreter::executeArithmetic(const Command& cmd) {
         default:
             throw std::runtime_error("Unknown arithmetic operation");
     }
-    
+
     m_variables[resultVar] = result;
 }
 
@@ -201,7 +201,7 @@ void Interpreter::executeComparison(const Command& cmd) {
     const std::string& resultVar = std::get<std::string>(cmd.dst);
     VarValue left = resolveOperand(cmd.src1);
     VarValue right = resolveOperand(cmd.src2);
-    
+
     bool result = false;
     switch (cmd.mnemonic) {
         case Command::Mnemonic::EQL:
@@ -225,13 +225,13 @@ void Interpreter::executeComparison(const Command& cmd) {
         default:
             throw std::runtime_error("Unknown comparison operation");
     }
-    
+
     m_variables[resultVar] = static_cast<int64_t>(result);
 }
 
 void Interpreter::executeLogical(const Command& cmd) {
     const std::string& resultVar = std::get<std::string>(cmd.dst);
-    
+
     if (cmd.mnemonic == Command::Mnemonic::NOT) {
         VarValue operand = resolveOperand(cmd.src1);
         bool value = toBool(operand);
@@ -239,28 +239,28 @@ void Interpreter::executeLogical(const Command& cmd) {
     } else {
         VarValue left = resolveOperand(cmd.src1);
         VarValue right = resolveOperand(cmd.src2);
-        
+
         bool leftBool = toBool(left);
         bool rightBool = toBool(right);
-        
+
         bool result = false;
         if (cmd.mnemonic == Command::Mnemonic::AND) {
             result = leftBool && rightBool;
         } else if (cmd.mnemonic == Command::Mnemonic::OR) {
             result = leftBool || rightBool;
         }
-        
+
         m_variables[resultVar] = static_cast<int64_t>(result);
     }
 }
 
-void Interpreter::executeControlFlow(const Command& cmd, 
+void Interpreter::executeControlFlow(const Command& cmd,
                                           std::vector<Command>::const_iterator& current) {
     if (cmd.mnemonic == Command::Mnemonic::LABEL) {
         // Labels are just markers, no action needed
         return;
     }
-    
+
     if (cmd.mnemonic == Command::Mnemonic::JMP) {
         const std::string& labelName = std::get<std::string>(cmd.dst);
         auto it = m_labels.find(labelName);
@@ -271,20 +271,20 @@ void Interpreter::executeControlFlow(const Command& cmd,
         }
         return;
     }
-    
+
     if (cmd.mnemonic == Command::Mnemonic::IF) {
         const std::string& conditionVar = std::get<std::string>(cmd.dst);
         const std::string& trueLabel = std::get<std::string>(cmd.src1);
         const std::string& falseLabel = std::get<std::string>(cmd.src2);
-        
+
         auto it = m_variables.find(conditionVar);
         if (it == m_variables.end()) {
             throw std::runtime_error("Condition variable not found: " + conditionVar);
         }
-        
+
         bool condition = toBool(it->second);
         const std::string& targetLabel = condition ? trueLabel : falseLabel;
-        
+
         auto labelIt = m_labels.find(targetLabel);
         if (labelIt != m_labels.end()) {
             current = labelIt->second;
@@ -297,7 +297,7 @@ void Interpreter::executeControlFlow(const Command& cmd,
 void Interpreter::executeIO(const Command& cmd) {
     auto callType = std::get<Command::CallType>(cmd.dst);
     const std::string& operand = std::get<std::string>(cmd.src1);
-    
+
     switch (callType) {
         case Command::CallType::READ: {
             int64_t value;
@@ -551,4 +551,4 @@ void Interpreter::printState() const {
         std::cout << std::endl;
     }
     std::cout << std::endl;
-} 
+}

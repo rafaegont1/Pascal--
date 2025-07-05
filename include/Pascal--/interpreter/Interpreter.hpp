@@ -12,18 +12,18 @@
 class Interpreter {
 public:
     using VarValue = std::variant<int64_t, double, std::string>;
-    
+
     Interpreter();
     ~Interpreter() = default;
 
     // Execute commands
     void execute(const std::vector<Command>& commands);
-    void execute(const std::vector<Command>& commands, 
+    void execute(const std::vector<Command>& commands,
                  const std::unordered_map<std::string, VariableInfo>& variableTypes);
 
     // Get execution results
     const std::unordered_map<std::string, VarValue>& getVariables() const { return m_variables; }
-    
+
     // Print current state
     void printState() const;
 
@@ -37,7 +37,7 @@ private:
     VarValue resolveOperand(const Command::Source& operand);
     void validateAssignment(const std::string& varName, const VarValue& value);
     bool isTypeCompatible(VarType expectedType, const VarValue& value);
-    
+
     // Command execution methods
     void executeAssignment(const Command& cmd);
     void executeArithmetic(const Command& cmd);
@@ -45,7 +45,7 @@ private:
     void executeLogical(const Command& cmd);
     void executeControlFlow(const Command& cmd, std::vector<Command>::const_iterator& current);
     void executeIO(const Command& cmd);
-    
+
     // Simple arithmetic operations - no templates
     VarValue addValues(const VarValue& left, const VarValue& right);
     VarValue subtractValues(const VarValue& left, const VarValue& right);
@@ -53,21 +53,21 @@ private:
     VarValue divideValues(const VarValue& left, const VarValue& right);
     VarValue moduloValues(const VarValue& left, const VarValue& right);
     VarValue integerDivideValues(const VarValue& left, const VarValue& right);
-    
+
     // Simple comparison operations
     bool compareLess(const VarValue& left, const VarValue& right);
     bool compareLessEqual(const VarValue& left, const VarValue& right);
     bool compareGreater(const VarValue& left, const VarValue& right);
     bool compareGreaterEqual(const VarValue& left, const VarValue& right);
-    
+
     // Simple type conversion methods
     bool toBool(const VarValue& value);
     int64_t toInt(const VarValue& value);
     double toDouble(const VarValue& value);
     std::string toString(const VarValue& value);
-    
+
     // Simple utility methods
     void printValue(const VarValue& value) const;
 };
 
-#endif // INTERPRETER_HPP 
+#endif // INTERPRETER_HPP

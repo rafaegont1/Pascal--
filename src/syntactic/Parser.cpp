@@ -64,7 +64,7 @@ void Parser::proc_declaration() {
     consume(TT_COLON);
     VarType type = proc_type();
     consume(TT_SEMICOLON);
-    
+
     // Store type information for all declared variables
     for (const auto& varName : varNames) {
         m_variableTypes[varName] = VariableInfo(type, varName);
@@ -231,18 +231,18 @@ void Parser::proc_forStmt() {
     std::string bodyLabel = generateLabel();
 
     consume(TT_FOR);
-    
-    // Capturar o nome da variável do loop 
+
+    // Capturar o nome da variável do loop
     std::string loopVar = m_lexeme->token;
     proc_atrib();
-    
+
     addCommand(Command::Mnemonic::LABEL, startLabel);
-    
+
     consume(TT_TO);
-    
+
     std::string endValue = m_lexeme->token;
     proc_endFor();
-    
+
     std::string temp = generateTemp();
     if (endValue.find_first_not_of("0123456789ABCDEFabcdef") == std::string::npos) {
         addCommand(Command::Mnemonic::LEQ, "TEMP:" + temp, loopVar, endValue);
@@ -250,17 +250,17 @@ void Parser::proc_forStmt() {
         addCommand(Command::Mnemonic::LEQ, "TEMP:" + temp, loopVar, endValue);
     }
     std::string condition = "TEMP:" + temp;
-    
+
     addCommand(Command::Mnemonic::IF, condition, bodyLabel, endLabel);
-    
+
     addCommand(Command::Mnemonic::LABEL, bodyLabel);
     consume(TT_DO);
     proc_stmt();
-    
+
     std::string incTemp = generateTemp();
     addCommand(Command::Mnemonic::ADD, "TEMP:" + incTemp, loopVar, "1");
     addCommand(Command::Mnemonic::ASSIGN, loopVar, "TEMP:" + incTemp);
-    
+
     addCommand(Command::Mnemonic::JMP, startLabel);
     addCommand(Command::Mnemonic::LABEL, endLabel);
 }
@@ -377,7 +377,7 @@ void Parser::proc_restoOutList(const std::string& writeType) {
 
 // <out> -> 'STR' | 'IDENT' | 'NUMint' | 'NUMfloat' ;
 void Parser::proc_out(const std::string& writeType) {
-    
+
     Command::CallType callType;
     if (writeType == "WRITELN") {
         // Check if this is the last argument by looking ahead
@@ -387,7 +387,7 @@ void Parser::proc_out(const std::string& writeType) {
     } else {
         callType = Command::CallType::WRITE;
     }
-    
+
     switch (m_lexeme->type) {
         case TT_LITERAL_STR: {
             std::string value = m_lexeme->token;
@@ -427,9 +427,9 @@ void Parser::proc_whileStmt() {
     std::string bodyLabel = generateLabel();
 
     consume(TT_WHILE);
-    
+
     addCommand(Command::Mnemonic::LABEL, startLabel);
-    
+
     proc_expr();
     std::string condition = popExpression();
 
@@ -513,10 +513,10 @@ void Parser::proc_atrib() {
     consume(TT_ASSIGN);
     proc_expr();
     std::string value = popExpression();
-    
+
     // Simple validation
     validateAssignment(varName, value);
-    
+
     addCommand(Command::Mnemonic::ASSIGN, varName, value);
 }
 
@@ -824,7 +824,7 @@ std::string Parser::generateEndLabel() {
 }
 
 // Simplified code generation methods
-void Parser::addCommand(Command::Mnemonic mnemonic, const std::string& dst, 
+void Parser::addCommand(Command::Mnemonic mnemonic, const std::string& dst,
                        const std::string& src1, const std::string& src2) {
     Command cmd;
     cmd.mnemonic = mnemonic;
@@ -834,7 +834,7 @@ void Parser::addCommand(Command::Mnemonic mnemonic, const std::string& dst,
     m_commands.push_back(cmd);
 }
 
-void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType, 
+void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
                        const std::string& src1, Command::ReadType readType) {
     Command cmd;
     cmd.mnemonic = mnemonic;
@@ -844,7 +844,7 @@ void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
     m_commands.push_back(cmd);
 }
 
-void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType, 
+void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
                        const std::string& src1, Command::WriteType writeType) {
     Command cmd;
     cmd.mnemonic = mnemonic;
@@ -857,7 +857,7 @@ void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
 // Simple utility methods for code generation
 bool Parser::isIntegerLiteral(const std::string& str) {
     if (str.empty()) return false;
-    
+
     // Handle hex, octal, decimal
     if (str.length() > 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
         return str.find_first_not_of("0123456789abcdefABCDEF", 2) == std::string::npos;
@@ -865,16 +865,16 @@ bool Parser::isIntegerLiteral(const std::string& str) {
     if (str.length() > 1 && str[0] == '0') {
         return str.find_first_not_of("01234567") == std::string::npos;
     }
-    
+
     return str.find_first_not_of("0123456789") == std::string::npos;
 }
 
 bool Parser::isRealLiteral(const std::string& str) {
     if (str.empty()) return false;
-    
+
     bool hasDot = false;
     bool hasDigit = false;
-    
+
     for (char c : str) {
         if (std::isdigit(c)) {
             hasDigit = true;
@@ -884,7 +884,7 @@ bool Parser::isRealLiteral(const std::string& str) {
             return false;
         }
     }
-    
+
     return hasDigit;
 }
 
@@ -902,12 +902,12 @@ void Parser::validateAssignment(const std::string& varName, const std::string& v
     if (it != m_variableTypes.end()) {
         VarType expectedType = it->second.type;
         VarType actualType = getValueType(value);
-        
+
         // Skip type checking for temporary variables (results of expressions)
         if (value.substr(0, 5) == "TEMP:") {
             return; // Temporary variables will be resolved at runtime
         }
-        
+
         if (!isTypeCompatible(expectedType, actualType)) {
             std::string error = std::format("Type error: Cannot assign {} to variable '{}' of type {}",
                 Printer::varTypeToString(actualType), varName, Printer::varTypeToString(expectedType));
@@ -925,12 +925,12 @@ bool Parser::isTypeCompatible(VarType expectedType, VarType actualType) {
     if (expectedType == actualType) {
         return true;
     }
-    
+
     // Type promotions
     if (expectedType == VarType::REAL && actualType == VarType::INTEGER) {
         return true; // Integer can be promoted to real
     }
-    
+
     return false;
 }
 

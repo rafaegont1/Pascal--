@@ -17,4 +17,4 @@ public:
     static std::string varTypeToString(VarType type);
 };
 
-#endif // PRINTER_HPP 
+#endif // PRINTER_HPP

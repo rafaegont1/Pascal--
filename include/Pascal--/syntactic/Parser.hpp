@@ -15,7 +15,7 @@ enum class VarType { INTEGER, REAL, STRING };
 struct VariableInfo {
     VarType type;
     std::string name;
-    
+
     VariableInfo() : type(VarType::INTEGER), name("") {}
     VariableInfo(VarType t, const std::string& n) : type(t), name(n) {}
 };
@@ -47,20 +47,20 @@ private:
     std::string generateTemp();
     std::string generateLabel();
     std::string generateEndLabel();
-    
+
     // Simplified code generation methods
-    void addCommand(Command::Mnemonic mnemonic, const std::string& dst = "", 
+    void addCommand(Command::Mnemonic mnemonic, const std::string& dst = "",
                    const std::string& src1 = "", const std::string& src2 = "");
-    void addCommand(Command::Mnemonic mnemonic, Command::CallType callType, 
+    void addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
                    const std::string& src1, Command::ReadType readType);
-    void addCommand(Command::Mnemonic mnemonic, Command::CallType callType, 
+    void addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
                    const std::string& src1, Command::WriteType writeType);
-    
+
     // Simple utility methods
     bool isIntegerLiteral(const std::string& str);
     bool isRealLiteral(const std::string& str);
     bool isStringLiteral(const std::string& str);
-    
+
     // Type checking methods
     void validateAssignment(const std::string& varName, const std::string& value);
     bool isTypeCompatible(VarType expectedType, VarType actualType);
