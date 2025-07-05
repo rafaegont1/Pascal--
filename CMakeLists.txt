@@ -7,8 +7,8 @@ project(pascal--)
 # Generate symbols for IDE indexer
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Default to C++23
-set(CMAKE_CXX_STANDARD 23)
+# Default to C++17
+set(CMAKE_CXX_STANDARD 17)
 
 # Set source files
 set(SOURCES

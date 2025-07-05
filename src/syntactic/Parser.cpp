@@ -3,7 +3,6 @@
 #include "Pascal--/util/Printer.hpp"
 
 #include <vector>
-#include <format>
 #include <iostream>
 #include <cctype>
 #include <stdexcept>
@@ -24,7 +23,7 @@ void Parser::consume(enum TokenType expected) {
         m_lexeme++;
     } else {
         throw SyntaxError(
-            std::format("expected '{}', found '{}'", tt2str(expected), m_lexeme->token),
+            "expected '" + tt2str(expected) + "', found '" + m_lexeme->token + "'",
             m_lexeme->line, m_lexeme->column
         );
     }
@@ -909,14 +908,15 @@ void Parser::validateAssignment(const std::string& varName, const std::string& v
         }
 
         if (!isTypeCompatible(expectedType, actualType)) {
-            std::string error = std::format("Type error: Cannot assign {} to variable '{}' of type {}",
-                Printer::varTypeToString(actualType), varName, Printer::varTypeToString(expectedType));
-            addTypeError(error);
+            addTypeError(
+                "Type error: Cannot assign "
+                + Printer::varTypeToString(actualType) + " to variable '"
+                + varName + "' of type" + Printer::varTypeToString(expectedType)
+            );
         }
     } else {
         // Variable not declared - could add warning here
-        std::string error = std::format("Warning: Variable '{}' not declared", varName);
-        addTypeError(error);
+        addTypeError("Warning: Variable '" + varName + "' not declared");
     }
 }
 
