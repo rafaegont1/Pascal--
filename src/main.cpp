@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 
         parser.start();
         std::cout << "None errors were found!" << std::endl;
-        
+
         // Print intermediate code
         std::cout << "" << std::endl;
         std::cout << "INTERMEDIATE CODE" << std::endl;

@@ -216,18 +216,18 @@ void Parser::proc_forStmt() {
     std::string bodyLabel = generateLabel();
 
     consume(TT_FOR);
-    
-    // Capturar o nome da variável do loop 
+
+    // Capturar o nome da variável do loop
     std::string loopVar = m_lexeme->token;
     proc_atrib();
-    
+
     m_intermediateCode.addInstruction(OpCode::LABEL, startLabel);
-    
+
     consume(TT_TO);
-    
+
     std::string endValue = m_lexeme->token;
     proc_endFor();
-    
+
     std::string temp = generateTemp();
     if (endValue.find_first_not_of("0123456789ABCDEFabcdef") == std::string::npos) {
         m_intermediateCode.addInstruction(OpCode::LEQ, "TEMP:" + temp, "VAR:" + loopVar, "LIT:" + endValue);
@@ -235,17 +235,17 @@ void Parser::proc_forStmt() {
         m_intermediateCode.addInstruction(OpCode::LEQ, "TEMP:" + temp, "VAR:" + loopVar, "VAR:" + endValue);
     }
     std::string condition = "TEMP:" + temp;
-    
+
     m_intermediateCode.addInstruction(OpCode::IF, condition, bodyLabel, endLabel);
-    
+
     m_intermediateCode.addInstruction(OpCode::LABEL, bodyLabel);
     consume(TT_DO);
     proc_stmt();
-    
+
     std::string incTemp = generateTemp();
     m_intermediateCode.addInstruction(OpCode::ADD, "TEMP:" + incTemp, "VAR:" + loopVar, "LIT:1");
     m_intermediateCode.addInstruction(OpCode::MOV, "VAR:" + loopVar, "TEMP:" + incTemp);
-    
+
     m_intermediateCode.addInstruction(OpCode::JUMP, startLabel);
     m_intermediateCode.addInstruction(OpCode::LABEL, endLabel);
 }
@@ -400,9 +400,9 @@ void Parser::proc_whileStmt() {
     std::string bodyLabel = generateLabel();
 
     consume(TT_WHILE);
-    
+
     m_intermediateCode.addInstruction(OpCode::LABEL, startLabel);
-    
+
     proc_expr();
     std::string condition = popExpression();
 

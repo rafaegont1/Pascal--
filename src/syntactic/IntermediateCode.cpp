@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 
-void IntermediateCode::addInstruction(OpCode opcode, const std::string& op1, 
+void IntermediateCode::addInstruction(OpCode opcode, const std::string& op1,
                                      const std::string& op2, const std::string& op3) {
     instructions.emplace_back(opcode, op1, op2, op3);
 }
@@ -49,20 +49,20 @@ std::string IntermediateCode::opcodeToString(OpCode opcode) const {
 void IntermediateCode::printCode() const {
     std::cout << "# Código Intermediário Gerado" << std::endl;
     std::cout << "# ==========================" << std::endl;
-    
+
     for (size_t i = 0; i < instructions.size(); ++i) {
         const auto& instr = instructions[i];
-        
-    
+
+
         std::cout << "(" << opcodeToString(instr.opcode);
-        
+
         std::cout << ", '" << (instr.operand1.empty() ? "None" : instr.operand1) << "'";
         std::cout << ", '" << (instr.operand2.empty() ? "None" : instr.operand2) << "'";
         std::cout << ", '" << (instr.operand3.empty() ? "None" : instr.operand3) << "'";
-        
-        
+
+
         std::cout << ")";
-        
+
         std::cout << std::endl;
     }
-} 
+}
