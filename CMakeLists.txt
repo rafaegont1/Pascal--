@@ -18,8 +18,9 @@ set(SOURCES
     src/lexical/Lexer.cpp
     src/main.cpp
     src/syntactic/Parser.cpp
-    src/syntactic/IntermediateCode.cpp
+    src/interpreter/Interpreter.cpp
     src/util/File.cpp
+    src/util/Printer.cpp
 )
 
 # Create executable

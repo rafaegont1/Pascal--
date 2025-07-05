@@ -1,8 +1,12 @@
 #include "Pascal--/syntactic/Parser.hpp"
 #include "Pascal--/util/exception.hpp"
+#include "Pascal--/util/Printer.hpp"
 
 #include <vector>
 #include <format>
+#include <iostream>
+#include <cctype>
+#include <stdexcept>
 
 Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexeme(lexemes.begin()) {
 }
@@ -55,24 +59,34 @@ void Parser::proc_declarations() {
 
 // <declaration> -> <listIdent> ':' <type> ';' ;
 void Parser::proc_declaration() {
-    proc_listIdent();
+    std::vector<std::string> varNames;
+    proc_listIdent(varNames);
     consume(TT_COLON);
-    proc_type();
+    VarType type = proc_type();
     consume(TT_SEMICOLON);
+    
+    // Store type information for all declared variables
+    for (const auto& varName : varNames) {
+        m_variableTypes[varName] = VariableInfo(type, varName);
+    }
 }
 
 // <listIdent> -> 'IDENT' <restIdentList> ;
-void Parser::proc_listIdent() {
+void Parser::proc_listIdent(std::vector<std::string>& varNames) {
+    std::string varName = m_lexeme->token;
     consume(TT_IDENT);
-    proc_restIdentList();
+    varNames.push_back(varName);
+    proc_restIdentList(varNames);
 }
 
 // <restIdentList> -> ',' 'IDENT' <restIdentList> | & ;
-void Parser::proc_restIdentList() {
+void Parser::proc_restIdentList(std::vector<std::string>& varNames) {
     if (m_lexeme->type == TT_COMMA) {
         consume(TT_COMMA);
+        std::string varName = m_lexeme->token;
         consume(TT_IDENT);
-        proc_restIdentList();
+        varNames.push_back(varName);
+        proc_restIdentList(varNames);
     }
 }
 
@@ -85,19 +99,19 @@ void Parser::proc_restDeclaration() {
 }
 
 // <type> -> 'integer' | 'real' | 'string' ;
-void Parser::proc_type() {
+VarType Parser::proc_type() {
     switch (m_lexeme->type) {
         case TT_TYPE_INT:
             consume(TT_TYPE_INT);
-            break;
+            return VarType::INTEGER;
 
         case TT_TYPE_REAL:
             consume(TT_TYPE_REAL);
-            break;
+            return VarType::REAL;
 
         case TT_TYPE_STR:
             consume(TT_TYPE_STR);
-            break;
+            return VarType::STRING;
 
         default:
             throw SyntaxError(
@@ -222,7 +236,7 @@ void Parser::proc_forStmt() {
     std::string loopVar = m_lexeme->token;
     proc_atrib();
     
-    m_intermediateCode.addInstruction(OpCode::LABEL, startLabel);
+    addCommand(Command::Mnemonic::LABEL, startLabel);
     
     consume(TT_TO);
     
@@ -231,24 +245,24 @@ void Parser::proc_forStmt() {
     
     std::string temp = generateTemp();
     if (endValue.find_first_not_of("0123456789ABCDEFabcdef") == std::string::npos) {
-        m_intermediateCode.addInstruction(OpCode::LEQ, "TEMP:" + temp, "VAR:" + loopVar, "LIT:" + endValue);
+        addCommand(Command::Mnemonic::LEQ, "TEMP:" + temp, loopVar, endValue);
     } else {
-        m_intermediateCode.addInstruction(OpCode::LEQ, "TEMP:" + temp, "VAR:" + loopVar, "VAR:" + endValue);
+        addCommand(Command::Mnemonic::LEQ, "TEMP:" + temp, loopVar, endValue);
     }
     std::string condition = "TEMP:" + temp;
     
-    m_intermediateCode.addInstruction(OpCode::IF, condition, bodyLabel, endLabel);
+    addCommand(Command::Mnemonic::IF, condition, bodyLabel, endLabel);
     
-    m_intermediateCode.addInstruction(OpCode::LABEL, bodyLabel);
+    addCommand(Command::Mnemonic::LABEL, bodyLabel);
     consume(TT_DO);
     proc_stmt();
     
     std::string incTemp = generateTemp();
-    m_intermediateCode.addInstruction(OpCode::ADD, "TEMP:" + incTemp, "VAR:" + loopVar, "LIT:1");
-    m_intermediateCode.addInstruction(OpCode::MOV, "VAR:" + loopVar, "TEMP:" + incTemp);
+    addCommand(Command::Mnemonic::ADD, "TEMP:" + incTemp, loopVar, "1");
+    addCommand(Command::Mnemonic::ASSIGN, loopVar, "TEMP:" + incTemp);
     
-    m_intermediateCode.addInstruction(OpCode::JUMP, startLabel);
-    m_intermediateCode.addInstruction(OpCode::LABEL, endLabel);
+    addCommand(Command::Mnemonic::JMP, startLabel);
+    addCommand(Command::Mnemonic::LABEL, endLabel);
 }
 
 // <endFor> -> 'IDENT' | 'NUMint' ;
@@ -296,7 +310,7 @@ void Parser::proc_ioStmt() {
             consume(TT_IDENT);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
-            m_intermediateCode.addInstruction(OpCode::CALL, "READ", "VAR:" + readVar);
+            addCommand(Command::Mnemonic::CALL, Command::CallType::READ, readVar, Command::ReadType::INTEGER);
             break;
         }
         case TT_WRITE: {
@@ -314,7 +328,7 @@ void Parser::proc_ioStmt() {
             consume(TT_IDENT);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
-            m_intermediateCode.addInstruction(OpCode::CALL, "READLN", "VAR:" + readlnVar);
+            addCommand(Command::Mnemonic::CALL, Command::CallType::READLN, readlnVar, Command::ReadType::STRING);
             break;
         }
         case TT_WRITELN: {
@@ -336,11 +350,11 @@ void Parser::proc_ioStmt() {
 // <outList> -> <out><restoOutList>;
 void Parser::proc_outList(const std::string& writeType) {
     proc_out(writeType);
-    proc_restoOutList();
+    proc_restoOutList(writeType);
 }
 
 // <restoOutList> -> ',' <outList> | &;
-void Parser::proc_restoOutList() {
+void Parser::proc_restoOutList(const std::string& writeType) {
     if (m_lexeme->type == TT_COMMA) {
         consume(TT_COMMA);
 
@@ -351,8 +365,9 @@ void Parser::proc_restoOutList() {
             case TT_LITERAL_DEC:
             case TT_LITERAL_HEX:
             case TT_LITERAL_REAL:
-                proc_outList();
-            break;
+                proc_out(writeType);
+                proc_restoOutList(writeType);
+                break;
 
             default:
                 break;
@@ -362,17 +377,28 @@ void Parser::proc_restoOutList() {
 
 // <out> -> 'STR' | 'IDENT' | 'NUMint' | 'NUMfloat' ;
 void Parser::proc_out(const std::string& writeType) {
+    
+    Command::CallType callType;
+    if (writeType == "WRITELN") {
+        // Check if this is the last argument by looking ahead
+        auto lookahead = m_lexeme + 1;
+        // If there's a comma after this token, it's not the last
+        callType = (lookahead->type == TT_COMMA) ? Command::CallType::WRITE : Command::CallType::WRITELN;
+    } else {
+        callType = Command::CallType::WRITE;
+    }
+    
     switch (m_lexeme->type) {
         case TT_LITERAL_STR: {
             std::string value = m_lexeme->token;
             consume(TT_LITERAL_STR);
-            m_intermediateCode.addInstruction(OpCode::CALL, writeType, "LIT:" + value);
+            addCommand(Command::Mnemonic::CALL, callType, value, Command::WriteType::STRING);
             break;
         }
         case TT_IDENT: {
             std::string value = m_lexeme->token;
             consume(TT_IDENT);
-            m_intermediateCode.addInstruction(OpCode::CALL, writeType, "VAR:" + value);
+            addCommand(Command::Mnemonic::CALL, callType, value, Command::WriteType::VARIABLE);
             break;
         }
         case TT_LITERAL_OCT:
@@ -381,7 +407,7 @@ void Parser::proc_out(const std::string& writeType) {
         case TT_LITERAL_REAL: {
             std::string value = m_lexeme->token;
             consume(m_lexeme->type);
-            m_intermediateCode.addInstruction(OpCode::CALL, writeType, "LIT:" + value);
+            addCommand(Command::Mnemonic::CALL, callType, value, Command::WriteType::STRING);
             break;
         }
         default:
@@ -402,20 +428,20 @@ void Parser::proc_whileStmt() {
 
     consume(TT_WHILE);
     
-    m_intermediateCode.addInstruction(OpCode::LABEL, startLabel);
+    addCommand(Command::Mnemonic::LABEL, startLabel);
     
     proc_expr();
     std::string condition = popExpression();
 
     // IF cond, bodyLabel, endLabel
-    m_intermediateCode.addInstruction(OpCode::IF, condition, bodyLabel, endLabel);
+    addCommand(Command::Mnemonic::IF, condition, bodyLabel, endLabel);
 
-    m_intermediateCode.addInstruction(OpCode::LABEL, bodyLabel);
+    addCommand(Command::Mnemonic::LABEL, bodyLabel);
     consume(TT_DO);
     proc_stmt();
 
-    m_intermediateCode.addInstruction(OpCode::JUMP, startLabel);
-    m_intermediateCode.addInstruction(OpCode::LABEL, endLabel);
+    addCommand(Command::Mnemonic::JMP, startLabel);
+    addCommand(Command::Mnemonic::LABEL, endLabel);
 }
 
 // if command
@@ -431,21 +457,21 @@ void Parser::proc_ifStmt(const std::string& endLabel) {
 
     std::string condition = popExpression();
     // IF cond, thenLabel, elseLabel
-    m_intermediateCode.addInstruction(OpCode::IF, condition, thenLabel, elseLabel);
+    addCommand(Command::Mnemonic::IF, condition, thenLabel, elseLabel);
 
     // THEN block
-    m_intermediateCode.addInstruction(OpCode::LABEL, thenLabel);
+    addCommand(Command::Mnemonic::LABEL, thenLabel);
     consume(TT_THEN);
     proc_stmt();
-    m_intermediateCode.addInstruction(OpCode::JUMP, finalEndLabel);
+    addCommand(Command::Mnemonic::JMP, finalEndLabel);
 
     // ELSE/ELSE IF block
-    m_intermediateCode.addInstruction(OpCode::LABEL, elseLabel);
+    addCommand(Command::Mnemonic::LABEL, elseLabel);
     proc_elsePart(finalEndLabel);
 
     // END label
     if (endLabel.empty()) {
-        m_intermediateCode.addInstruction(OpCode::LABEL, finalEndLabel);
+        addCommand(Command::Mnemonic::LABEL, finalEndLabel);
     }
 }
 
@@ -486,9 +512,12 @@ void Parser::proc_atrib() {
     consume(TT_IDENT);
     consume(TT_ASSIGN);
     proc_expr();
-    // Gera código para atribuição
     std::string value = popExpression();
-    m_intermediateCode.addInstruction(OpCode::MOV, "VAR:" + varName, value);
+    
+    // Simple validation
+    validateAssignment(varName, value);
+    
+    addCommand(Command::Mnemonic::ASSIGN, varName, value);
 }
 
 // <expr> -> <or> ;
@@ -553,7 +582,7 @@ void Parser::proc_restoRel() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::EQL, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::EQL, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -563,7 +592,7 @@ void Parser::proc_restoRel() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::NEQ, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::NEQ, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -573,7 +602,7 @@ void Parser::proc_restoRel() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::LSS, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::LSS, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -583,7 +612,7 @@ void Parser::proc_restoRel() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::LEQ, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::LEQ, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -593,7 +622,7 @@ void Parser::proc_restoRel() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::GRT, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::GTR, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -603,7 +632,7 @@ void Parser::proc_restoRel() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::GEQ, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::GEQ, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -629,7 +658,7 @@ void Parser::proc_restoAdd() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::ADD, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::ADD, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -640,7 +669,7 @@ void Parser::proc_restoAdd() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::SUB, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::SUB, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -668,7 +697,7 @@ void Parser::proc_restoMult() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::MUL, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::MUL, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -679,7 +708,7 @@ void Parser::proc_restoMult() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::DIV, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::DIV, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -690,7 +719,7 @@ void Parser::proc_restoMult() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::MOD, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::MOD, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -701,7 +730,7 @@ void Parser::proc_restoMult() {
             std::string right = popExpression();
             std::string left = popExpression();
             std::string temp = generateTemp();
-            m_intermediateCode.addInstruction(OpCode::DIV, "TEMP:" + temp, left, right);
+            addCommand(Command::Mnemonic::IDIV, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
             break;
         }
@@ -738,13 +767,13 @@ void Parser::proc_fator() {
         case TT_LITERAL_HEX:
         case TT_LITERAL_REAL: {
             std::string value = m_lexeme->token;
-            pushExpression("LIT:" + value);
+            pushExpression(value);
             consume(m_lexeme->type);
             break;
         }
         case TT_IDENT: {
             std::string value = m_lexeme->token;
-            pushExpression("VAR:" + value);
+            pushExpression(value);
             consume(TT_IDENT);
             break;
         }
@@ -755,7 +784,7 @@ void Parser::proc_fator() {
             break;
         case TT_LITERAL_STR: {
             std::string value = m_lexeme->token;
-            pushExpression("LIT:" + value);
+            pushExpression(value);
             consume(TT_LITERAL_STR);
             break;
         }
@@ -765,6 +794,7 @@ void Parser::proc_fator() {
                 m_lexeme->line, m_lexeme->column
             );
     }
+
 }
 
 // Métodos auxiliares para geração de código intermediário
@@ -792,3 +822,136 @@ std::string Parser::generateLabel() {
 std::string Parser::generateEndLabel() {
     return "endLabel" + std::to_string(++m_labelCounter);
 }
+
+// Simplified code generation methods
+void Parser::addCommand(Command::Mnemonic mnemonic, const std::string& dst, 
+                       const std::string& src1, const std::string& src2) {
+    Command cmd;
+    cmd.mnemonic = mnemonic;
+    cmd.dst = std::string(dst);
+    cmd.src1 = std::string(src1);
+    cmd.src2 = std::string(src2);
+    m_commands.push_back(cmd);
+}
+
+void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType, 
+                       const std::string& src1, Command::ReadType readType) {
+    Command cmd;
+    cmd.mnemonic = mnemonic;
+    cmd.dst = callType;
+    cmd.src1 = std::string(src1);
+    cmd.src2 = readType;
+    m_commands.push_back(cmd);
+}
+
+void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType, 
+                       const std::string& src1, Command::WriteType writeType) {
+    Command cmd;
+    cmd.mnemonic = mnemonic;
+    cmd.dst = callType;
+    cmd.src1 = std::string(src1);
+    cmd.src2 = writeType;
+    m_commands.push_back(cmd);
+}
+
+// Simple utility methods for code generation
+bool Parser::isIntegerLiteral(const std::string& str) {
+    if (str.empty()) return false;
+    
+    // Handle hex, octal, decimal
+    if (str.length() > 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
+        return str.find_first_not_of("0123456789abcdefABCDEF", 2) == std::string::npos;
+    }
+    if (str.length() > 1 && str[0] == '0') {
+        return str.find_first_not_of("01234567") == std::string::npos;
+    }
+    
+    return str.find_first_not_of("0123456789") == std::string::npos;
+}
+
+bool Parser::isRealLiteral(const std::string& str) {
+    if (str.empty()) return false;
+    
+    bool hasDot = false;
+    bool hasDigit = false;
+    
+    for (char c : str) {
+        if (std::isdigit(c)) {
+            hasDigit = true;
+        } else if (c == '.' && !hasDot) {
+            hasDot = true;
+        } else {
+            return false;
+        }
+    }
+    
+    return hasDigit;
+}
+
+bool Parser::isStringLiteral(const std::string& str) {
+    return str.length() >= 2 && str[0] == '"' && str[str.length() - 1] == '"';
+}
+
+// Type checking methods
+void Parser::addTypeError(const std::string& error) {
+    m_typeErrors.push_back(error);
+}
+
+void Parser::validateAssignment(const std::string& varName, const std::string& value) {
+    auto it = m_variableTypes.find(varName);
+    if (it != m_variableTypes.end()) {
+        VarType expectedType = it->second.type;
+        VarType actualType = getValueType(value);
+        
+        // Skip type checking for temporary variables (results of expressions)
+        if (value.substr(0, 5) == "TEMP:") {
+            return; // Temporary variables will be resolved at runtime
+        }
+        
+        if (!isTypeCompatible(expectedType, actualType)) {
+            std::string error = std::format("Type error: Cannot assign {} to variable '{}' of type {}",
+                Printer::varTypeToString(actualType), varName, Printer::varTypeToString(expectedType));
+            addTypeError(error);
+        }
+    } else {
+        // Variable not declared - could add warning here
+        std::string error = std::format("Warning: Variable '{}' not declared", varName);
+        addTypeError(error);
+    }
+}
+
+bool Parser::isTypeCompatible(VarType expectedType, VarType actualType) {
+    // Direct type matches
+    if (expectedType == actualType) {
+        return true;
+    }
+    
+    // Type promotions
+    if (expectedType == VarType::REAL && actualType == VarType::INTEGER) {
+        return true; // Integer can be promoted to real
+    }
+    
+    return false;
+}
+
+VarType Parser::getValueType(const std::string& value) {
+    if (isIntegerLiteral(value)) {
+        return VarType::INTEGER;
+    } else if (isRealLiteral(value)) {
+        return VarType::REAL;
+    } else if (isStringLiteral(value)) {
+        return VarType::STRING;
+    } else {
+        // Assume it's a variable - check its declared type
+        auto it = m_variableTypes.find(value);
+        if (it != m_variableTypes.end()) {
+            return it->second.type;
+        }
+        // If it's not a literal and not a declared variable, assume it's a string
+        return VarType::STRING;
+    }
+}
+
+
+
+

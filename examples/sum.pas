@@ -1,6 +1,6 @@
 program SomaSimples;
 var
-  i, soma: integer;
+  i, soma, j: integer;
 begin
   soma := 0;
   for j := 1 to 5 do

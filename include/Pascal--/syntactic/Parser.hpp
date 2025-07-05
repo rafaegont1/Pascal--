@@ -4,9 +4,21 @@
 #include <vector>
 #include "Pascal--/lexical/Lexeme.hpp"
 #include "Pascal--/lexical/TokenType.hpp"
-#include "Pascal--/syntactic/IntermediateCode.hpp"
+#include "Pascal--/interpreter/Command.hpp"
 #include <vector>
 #include <string>
+#include <unordered_map>
+
+// Type system
+enum class VarType { INTEGER, REAL, STRING };
+
+struct VariableInfo {
+    VarType type;
+    std::string name;
+    
+    VariableInfo() : type(VarType::INTEGER), name("") {}
+    VariableInfo(VarType t, const std::string& n) : type(t), name(n) {}
+};
 
 class Parser {
 public:
@@ -14,14 +26,18 @@ public:
     virtual ~Parser();
 
     void start();
-    // Métodos para obter e imprimir o código intermediário
-    const IntermediateCode& getIntermediateCode() const { return m_intermediateCode; }
-    void printIntermediateCode() const { m_intermediateCode.printCode(); }
+    // Public interface
+    const std::vector<Command>& getCommands() const { return m_commands; }
+    const std::unordered_map<std::string, VariableInfo>& getVariableTypes() const { return m_variableTypes; }
+    const std::vector<std::string>& getTypeErrors() const { return m_typeErrors; }
+    bool hasTypeErrors() const { return !m_typeErrors.empty(); }
 
 private:
     std::vector<Lexeme>::const_iterator m_lexeme;
-    IntermediateCode m_intermediateCode;
+    std::vector<Command> m_commands;
     std::vector<std::string> m_expressionStack;
+    std::unordered_map<std::string, VariableInfo> m_variableTypes;
+    std::vector<std::string> m_typeErrors;
     int m_tempCounter = 0;
     int m_labelCounter = 0;
 
@@ -31,6 +47,25 @@ private:
     std::string generateTemp();
     std::string generateLabel();
     std::string generateEndLabel();
+    
+    // Simplified code generation methods
+    void addCommand(Command::Mnemonic mnemonic, const std::string& dst = "", 
+                   const std::string& src1 = "", const std::string& src2 = "");
+    void addCommand(Command::Mnemonic mnemonic, Command::CallType callType, 
+                   const std::string& src1, Command::ReadType readType);
+    void addCommand(Command::Mnemonic mnemonic, Command::CallType callType, 
+                   const std::string& src1, Command::WriteType writeType);
+    
+    // Simple utility methods
+    bool isIntegerLiteral(const std::string& str);
+    bool isRealLiteral(const std::string& str);
+    bool isStringLiteral(const std::string& str);
+    
+    // Type checking methods
+    void validateAssignment(const std::string& varName, const std::string& value);
+    bool isTypeCompatible(VarType expectedType, VarType actualType);
+    VarType getValueType(const std::string& value);
+    void addTypeError(const std::string& error);
 
     void consume(enum TokenType expected);
 
@@ -42,11 +77,11 @@ private:
     //  variable declarations
     // ------------------------------------
     void proc_declarations();
+    VarType proc_type();
     void proc_declaration();
-    void proc_listIdent();
-    void proc_restIdentList();
+    void proc_listIdent(std::vector<std::string>& varNames);
+    void proc_restIdentList(std::vector<std::string>& varNames);
     void proc_restDeclaration();
-    void proc_type();
     // ------------------------------------
     //  program statements
     // ------------------------------------
@@ -62,7 +97,7 @@ private:
     // IO commands
     void proc_ioStmt();
     void proc_outList(const std::string& writeType = "WRITE");
-    void proc_restoOutList();
+    void proc_restoOutList(const std::string& writeType = "WRITE");
     void proc_out(const std::string& writeType = "WRITE");
     void proc_whileStmt();
     void proc_ifStmt(const std::string& endLabel = "");
