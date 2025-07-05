@@ -2,7 +2,6 @@
 #include "Pascal--/util/exception.hpp"
 
 #include <vector>
-#include <format>
 
 Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexeme(lexemes.begin()) {
 }
@@ -20,7 +19,7 @@ void Parser::consume(enum TokenType expected) {
         m_lexeme++;
     } else {
         throw SyntaxError(
-            std::format("expected '{}', found '{}'", tt2str(expected), m_lexeme->token),
+            "expected " + tt2str(expected) + ", found" + m_lexeme->token,
             m_lexeme->line, m_lexeme->column
         );
     }

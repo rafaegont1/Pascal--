@@ -1,6 +1,5 @@
 #include "Pascal--/lexical/Lexer.hpp"
 
-#include <format>
 #include <cctype>
 #include "Pascal--/lexical/TokenType.hpp"
 #include "Pascal--/lexical/SymbolTable.hpp"
@@ -429,8 +428,9 @@ Lexeme Lexer::make_lexeme() {
                 break;
 
             default:
-                throw std::format(
-                    "invalid '{}' state number in lexer", std::to_string(state)
+                throw LexicalError(
+                    "invalid " + std::to_string(state) + " state number in lexer",
+                    lexeme.line, lexeme.column
                 );
         }
     }

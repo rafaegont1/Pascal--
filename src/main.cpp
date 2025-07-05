@@ -35,11 +35,13 @@ int main(int argc, char* argv[]) {
         parser.printIntermediateCode();
 
     } catch (const LexicalError& e) {
-        std::cout << "Lexical Error at " << e.line() << ":" << e.column() << ": " << e.what() << std::endl;
+        std::cout << "Lexical Error at " << e.line() << ":" << e.column()
+            << ": " << e.what() << std::endl;
         exit(EXIT_FAILURE);
 
     } catch (const SyntaxError& e) {
-        std::cout << "Syntax Error at " << e.line() << ":" << e.column() << ": " << e.what() << std::endl;
+        std::cout << "Syntax Error at " << e.line() << ":" << e.column()
+            << ": " << e.what() << std::endl;
         exit(EXIT_FAILURE);
 
     } catch (const std::exception& e) {
