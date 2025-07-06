@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Execution skipped due to type errors." << std::endl;
     } else {
         // Step 3: Execution using the simplified interpreter
-        std::cout << "" << std::endl;
+        std::cout << "=========" << std::endl;
         std::cout << "EXECUTION" << std::endl;
         std::cout << "=========" << std::endl;
 

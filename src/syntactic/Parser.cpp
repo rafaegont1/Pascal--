@@ -823,8 +823,10 @@ std::string Parser::generateEndLabel() {
 }
 
 // Simplified code generation methods
-void Parser::addCommand(Command::Mnemonic mnemonic, const std::string& dst,
-    const std::string& src1, const std::string& src2) {
+void Parser::addCommand(
+    Command::Mnemonic mnemonic, const std::string& dst,
+    const std::string& src1, const std::string& src2
+) {
     Command cmd;
     cmd.mnemonic = mnemonic;
     cmd.dst = std::string(dst);
@@ -833,8 +835,10 @@ void Parser::addCommand(Command::Mnemonic mnemonic, const std::string& dst,
     m_commands.push_back(cmd);
 }
 
-void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
-    const std::string& src1, Command::ReadType readType) {
+void Parser::addCommand(
+    Command::Mnemonic mnemonic, Command::CallType callType,
+    const std::string& src1, Command::ReadType readType
+) {
     Command cmd;
     cmd.mnemonic = mnemonic;
     cmd.dst = callType;

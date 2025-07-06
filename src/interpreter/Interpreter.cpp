@@ -148,10 +148,9 @@ bool Interpreter::isTypeCompatible(VarType expectedType, const VarValue& value) 
     return std::visit([expectedType](const auto& val) -> bool {
         using T = std::decay_t<decltype(val)>;
 
-        if constexpr (std::is_same_v<T, int64_t>) {
-            return expectedType == VarType::INTEGER || expectedType == VarType::REAL;
-        } else if constexpr (std::is_same_v<T, double>) {
-            return expectedType == VarType::REAL;
+        if constexpr (std::is_arithmetic_v<T>) {
+            return expectedType == VarType::INTEGER
+                || expectedType == VarType::REAL;
         } else if constexpr (std::is_same_v<T, std::string>) {
             return expectedType == VarType::STRING;
         } else {

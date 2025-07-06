@@ -10,7 +10,7 @@
 #include <unordered_map>
 
 // Type system
-enum class VarType { INTEGER, REAL, STRING };
+enum class VarType : uint8_t { INTEGER, REAL, STRING };
 
 struct VariableInfo {
     VarType type;
