@@ -127,9 +127,9 @@ Interpreter::VarValue Interpreter::resolveOperand(const Command::Source& operand
         } else if constexpr (std::is_same_v<T, int64_t> || std::is_same_v<T, double>) {
             return arg;
         } else if constexpr (std::is_same_v<T, std::monostate>) {
-            throw std::runtime_error("Cannot resolve monostate operand");
+            throw std::runtime_error("cannot resolve monostate operand");
         } else {
-            throw std::runtime_error("Unsupported operand type");
+            throw std::runtime_error("unsupported operand type");
         }
     }, operand);
 }
@@ -138,7 +138,8 @@ void Interpreter::validateAssignment(const std::string& varName, const VarValue&
     auto it = m_variableTypes.find(varName);
     if (it != m_variableTypes.end()) {
         if (!isTypeCompatible(it->second.type, value)) {
-            throw std::runtime_error("Type mismatch in assignment");
+            throw std::runtime_error("type mismatch in assignment for '"
+                + varName + "' variable");
         }
     }
 }
@@ -193,7 +194,8 @@ void Interpreter::executeArithmetic(const Command& cmd) {
             result = integerDivideValues(left, right);
             break;
         default:
-            throw std::runtime_error("Unknown arithmetic operation");
+            throw std::runtime_error("unknown arithmetic operation (mnemonic "
+                + std::to_string((uint8_t)cmd.mnemonic) + ")");
     }
 
     m_variables[resultVar] = result;
@@ -225,7 +227,8 @@ void Interpreter::executeComparison(const Command& cmd) {
             result = compareGreaterEqual(left, right);
             break;
         default:
-            throw std::runtime_error("Unknown comparison operation");
+            throw std::runtime_error("unknown comparison operation (mnemonic "
+                + std::to_string((uint8_t)cmd.mnemonic) + ")");
     }
 
     m_variables[resultVar] = static_cast<int64_t>(result);
@@ -256,8 +259,10 @@ void Interpreter::executeLogical(const Command& cmd) {
     }
 }
 
-void Interpreter::executeControlFlow(const Command& cmd,
-                                          std::vector<Command>::const_iterator& current) {
+void Interpreter::executeControlFlow(
+    const Command& cmd,
+    std::vector<Command>::const_iterator& current
+) {
     if (cmd.mnemonic == Command::Mnemonic::LABEL) {
         // Labels are just markers, no action needed
         return;
@@ -269,7 +274,7 @@ void Interpreter::executeControlFlow(const Command& cmd,
         if (it != m_labels.end()) {
             current = it->second;
         } else {
-            throw std::runtime_error("Label not found: " + labelName);
+            throw std::runtime_error("label '" + labelName + "' not found");
         }
         return;
     }
@@ -281,7 +286,8 @@ void Interpreter::executeControlFlow(const Command& cmd,
 
         auto it = m_variables.find(conditionVar);
         if (it == m_variables.end()) {
-            throw std::runtime_error("Condition variable not found: " + conditionVar);
+            throw std::runtime_error("condition variable '" + conditionVar
+                + "' not found");
         }
 
         bool condition = toBool(it->second);
@@ -291,7 +297,7 @@ void Interpreter::executeControlFlow(const Command& cmd,
         if (labelIt != m_labels.end()) {
             current = labelIt->second;
         } else {
-            throw std::runtime_error("Label not found: " + targetLabel);
+            throw std::runtime_error("label '" + targetLabel + "' not found");
         }
     }
 }
@@ -379,7 +385,7 @@ Interpreter::VarValue Interpreter::divideValues(const VarValue& left, const VarV
     double l = toDouble(left);
     double r = toDouble(right);
     if (r == 0.0) {
-        throw std::runtime_error("Division by zero");
+        throw std::runtime_error("division by zero");
     }
     return l / r;
 }
@@ -388,7 +394,7 @@ Interpreter::VarValue Interpreter::moduloValues(const VarValue& left, const VarV
     int64_t l = toInt(left);
     int64_t r = toInt(right);
     if (r == 0) {
-        throw std::runtime_error("Modulo by zero");
+        throw std::runtime_error("modulo by zero");
     }
     return l % r;
 }
@@ -397,7 +403,7 @@ Interpreter::VarValue Interpreter::integerDivideValues(const VarValue& left, con
     int64_t l = toInt(left);
     int64_t r = toInt(right);
     if (r == 0) {
-        throw std::runtime_error("Integer division by zero");
+        throw std::runtime_error("integer division by zero");
     }
     return l / r;
 }

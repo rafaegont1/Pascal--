@@ -153,7 +153,7 @@ Lexeme Lexer::make_lexeme() {
                     lexeme.type = SymbolTable::find(lexeme.token);
                     c = m_file.advance();
                     if (lexeme.type == TT_INVALID) {
-                        throw LexicalError(
+                        throw CompilerError(
                             "invalid token",
                             lexeme.line, lexeme.column
                         );
@@ -168,7 +168,7 @@ Lexeme Lexer::make_lexeme() {
                         lexeme.type = TT_EOF;
                         state = STATE_FINAL;
                     } else {
-                        throw LexicalError(
+                        throw CompilerError(
                             "invalid token",
                             lexeme.line, lexeme.column
                         );
@@ -204,12 +204,12 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_REAL;
                 } else if ('8' <= c && c <= '9') {
-                    throw LexicalError(
+                    throw CompilerError(
                         "8 and 9 aren't octal digits",
                         lexeme.line, lexeme.column
                     );
                 } else if (std::isalpha(c)) {
-                    throw LexicalError(
+                    throw CompilerError(
                         "unexpected alphabetical character",
                         lexeme.line, lexeme.column
                     );
@@ -225,12 +225,12 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_OCTAL;
                 } else if (std::isalpha(c)) {
-                    throw LexicalError(
+                    throw CompilerError(
                         "unexpected alphabetical character",
                         lexeme.line, lexeme.column
                     );
                 } else if ('8' <= c && c <= '9') {
-                    throw LexicalError(
+                    throw CompilerError(
                         "8 and 9 aren't octal digits",
                         lexeme.line, lexeme.column
                     );
@@ -246,12 +246,12 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_HEX;
                 } else if ('a' <= c && c <= 'f') {
-                    throw LexicalError(
+                    throw CompilerError(
                         "hexadecimals must use upper case letters",
                         lexeme.line, lexeme.column
                     );
                 } else if (std::isalpha(c)) {
-                    throw LexicalError(
+                    throw CompilerError(
                         "unexpected alphabetical character",
                         lexeme.line, lexeme.column
                     );
@@ -271,7 +271,7 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_REAL;
                 } else if (std::isalpha(c)) {
-                    throw LexicalError(
+                    throw CompilerError(
                         "unexpected alphabetical character",
                         lexeme.line, lexeme.column
                     );
@@ -287,12 +287,12 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_REAL;
                 } else if (std::isalpha(c)) {
-                    throw LexicalError(
+                    throw CompilerError(
                         "unexpected alphabetical character",
                         lexeme.line, lexeme.column
                     );
                 } else if (c == '.') {
-                    throw LexicalError(
+                    throw CompilerError(
                         "real number with more than one period",
                         lexeme.line, lexeme.column
                     );
@@ -333,7 +333,7 @@ Lexeme Lexer::make_lexeme() {
                     c = m_file.advance();
                     state = STATE_INITIAL;
                 } else if (c == '\0') {
-                    throw LexicalError(
+                    throw CompilerError(
                         "end of file before closing multi-line comment",
                         lexeme.line, lexeme.column
                     );
@@ -398,7 +398,7 @@ Lexeme Lexer::make_lexeme() {
 
             case STATE_STRING:
                 if (c == '\n') {
-                    throw LexicalError(
+                    throw CompilerError(
                         "new line while trying to tokenize string literal",
                         lexeme.line, lexeme.column
                     );
@@ -409,7 +409,7 @@ Lexeme Lexer::make_lexeme() {
                         case 'r':  lexeme.token.back() = '\r'; break;
                         case '\\': lexeme.token.back() = '\\'; break;
                         case '\"': lexeme.token.back() = '\"'; break;
-                        default:   throw LexicalError(
+                        default:   throw CompilerError(
                             "not defined escape code",
                             lexeme.line, lexeme.column
                         );
@@ -428,7 +428,7 @@ Lexeme Lexer::make_lexeme() {
                 break;
 
             default:
-                throw LexicalError(
+                throw CompilerError(
                     "invalid '" + std::to_string(state) + "' state number in lexer", 
                     lexeme.line, lexeme.column
                 );

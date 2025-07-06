@@ -22,7 +22,7 @@ void Parser::consume(enum TokenType expected) {
     if (expected == m_lexeme->type) {
         m_lexeme++;
     } else {
-        throw SyntaxError(
+        throw CompilerError(
             "expected '" + tt2str(expected) + "', found '" + m_lexeme->token + "'",
             m_lexeme->line, m_lexeme->column
         );
@@ -113,7 +113,7 @@ VarType Parser::proc_type() {
             return VarType::STRING;
 
         default:
-            throw SyntaxError(
+            throw CompilerError(
                 "Expected integer, real or string, found",
                 m_lexeme->line, m_lexeme->column
             );
@@ -210,7 +210,7 @@ void Parser::proc_stmt() {
             break;
 
         default:
-            throw SyntaxError(
+            throw CompilerError(
                 "Undefined statement , expected flow control, ; ,break, continue or attribuition",
                 m_lexeme->line, m_lexeme->column
             );
@@ -288,7 +288,7 @@ void Parser::proc_endFor() {
             break;
 
         default:
-            throw SyntaxError(
+            throw CompilerError(
                 "Expected variable or literal value, found",
                 m_lexeme->line, m_lexeme->column
             );
@@ -339,7 +339,7 @@ void Parser::proc_ioStmt() {
             break;
         }
         default:
-            throw SyntaxError(
+            throw CompilerError(
                 "Poorly formated Read or Write stament",
                 m_lexeme->line, m_lexeme->column
             );
@@ -376,8 +376,8 @@ void Parser::proc_restoOutList(const std::string& writeType) {
 
 // <out> -> 'STR' | 'IDENT' | 'NUMint' | 'NUMfloat' ;
 void Parser::proc_out(const std::string& writeType) {
-
     Command::CallType callType;
+
     if (writeType == "WRITELN") {
         // Check if this is the last argument by looking ahead
         auto lookahead = m_lexeme + 1;
@@ -410,7 +410,7 @@ void Parser::proc_out(const std::string& writeType) {
             break;
         }
         default:
-            throw SyntaxError(
+            throw CompilerError(
                 "Invalid output information, expected string, variable or number, found",
                 m_lexeme->line, m_lexeme->column
             );
@@ -492,7 +492,7 @@ void Parser::proc_elsePart(const std::string& endLabel) {
                     proc_stmt();
                     break;
                 default:
-                    throw SyntaxError(
+                    throw CompilerError(
                         "Invalid else statment",
                         m_lexeme->line, m_lexeme->column
                     );
@@ -788,7 +788,7 @@ void Parser::proc_fator() {
             break;
         }
         default:
-            throw SyntaxError(
+            throw CompilerError(
                 "Invalid fator",
                 m_lexeme->line, m_lexeme->column
             );
@@ -799,7 +799,7 @@ void Parser::proc_fator() {
 // Métodos auxiliares para geração de código intermediário
 std::string Parser::popExpression() {
     if (m_expressionStack.empty()) {
-        throw std::runtime_error("Erro: tentativa de acessar pilha de expressões vazia");
+        throw std::runtime_error("tried to access empty expression stack");
     }
     std::string result = m_expressionStack.back();
     m_expressionStack.pop_back();
@@ -824,7 +824,7 @@ std::string Parser::generateEndLabel() {
 
 // Simplified code generation methods
 void Parser::addCommand(Command::Mnemonic mnemonic, const std::string& dst,
-                       const std::string& src1, const std::string& src2) {
+    const std::string& src1, const std::string& src2) {
     Command cmd;
     cmd.mnemonic = mnemonic;
     cmd.dst = std::string(dst);
@@ -834,7 +834,7 @@ void Parser::addCommand(Command::Mnemonic mnemonic, const std::string& dst,
 }
 
 void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
-                       const std::string& src1, Command::ReadType readType) {
+    const std::string& src1, Command::ReadType readType) {
     Command cmd;
     cmd.mnemonic = mnemonic;
     cmd.dst = callType;
@@ -844,7 +844,7 @@ void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
 }
 
 void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
-                       const std::string& src1, Command::WriteType writeType) {
+    const std::string& src1, Command::WriteType writeType) {
     Command cmd;
     cmd.mnemonic = mnemonic;
     cmd.dst = callType;
