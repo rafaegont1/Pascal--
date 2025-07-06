@@ -10,8 +10,10 @@ void Interpreter::execute(const std::vector<Command>& commands) {
     execute(commands, std::unordered_map<std::string, VariableInfo>{});
 }
 
-void Interpreter::execute(const std::vector<Command>& commands,
-                               const std::unordered_map<std::string, VariableInfo>& variableTypes) {
+void Interpreter::execute(
+    const std::vector<Command>& commands,
+    const std::unordered_map<std::string, VariableInfo>& variableTypes
+) {
     m_variables.clear();
     m_labels.clear();
     m_variableTypes = variableTypes;

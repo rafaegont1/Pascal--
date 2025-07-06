@@ -226,8 +226,8 @@ void Parser::proc_stmt() {
 // <forStmt> -> 'for' <atrib> 'to' <endFor> 'do' <stmt> ;
 void Parser::proc_forStmt() {
     std::string startLabel = generateLabel();
-    std::string endLabel = generateEndLabel();
     std::string bodyLabel = generateLabel();
+    std::string endLabel = generateEndLabel();
 
     consume(TT_FOR);
 
@@ -799,7 +799,7 @@ void Parser::proc_fator() {
 // Métodos auxiliares para geração de código intermediário
 std::string Parser::popExpression() {
     if (m_expressionStack.empty()) {
-        throw std::string("Erro: tentativa de acessar pilha de expressões vazia");
+        throw std::runtime_error("Erro: tentativa de acessar pilha de expressões vazia");
     }
     std::string result = m_expressionStack.back();
     m_expressionStack.pop_back();
@@ -884,7 +884,7 @@ bool Parser::isRealLiteral(const std::string& str) {
         }
     }
 
-    return hasDigit;
+    return hasDigit && hasDot;
 }
 
 bool Parser::isStringLiteral(const std::string& str) {
@@ -951,7 +951,3 @@ VarType Parser::getValueType(const std::string& value) {
         return VarType::STRING;
     }
 }
-
-
-
-

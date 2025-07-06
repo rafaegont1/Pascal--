@@ -18,7 +18,7 @@ static const char* get_text(const char* filename) {
 
     // Throw exception if couldn't open file
     if (!text.is_open()) {
-        throw std::string("couldn't open file " + std::string(filename));
+        throw std::runtime_error("couldn't open file " + std::string(filename));
     }
 
     // Determine the size of the file in bytes
