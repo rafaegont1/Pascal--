@@ -19,29 +19,31 @@ int main(int argc, char* argv[]) {
     try {
         lexer.scan_file(filename);
     } catch (const CompilerError& e) {
-        std::cout << "Lexical Error at " << e.line() << ":" << e.column()
+        std::cerr << "Lexical Error at " << e.line() << ":" << e.column()
             << ": " << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
 
     const std::vector<Lexeme>& lexemes = lexer.lexemes();
 
+#ifdef VERBOSE
     // Print lexemes found within lexer
     Printer::printLexemes(lexemes);
+#endif // VERBOSE
 
     // Step 2: Parsing and Code Generation
     Parser parser(lexemes);
-
     try {
         parser.start();
     } catch (const CompilerError& e) {
-        std::cout << "Syntax Error at " << e.line() << ":" << e.column()
+        std::cerr << "Syntax Error at " << e.line() << ":" << e.column()
             << ": " << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
 
+#ifdef VERBOSE
     if (parser.hasTypeErrors()) {
-        std::cout << "Type errors found during parsing, but continuing to show generated commands..." << std::endl;
+        std::cerr << "Type errors found during parsing, but continuing to show generated commands..." << std::endl;
     } else {
         std::cout << "No errors were found!" << std::endl;
     }
@@ -51,28 +53,34 @@ int main(int argc, char* argv[]) {
 
     // Print generated commands
     Printer::printCommands(parser.getCommands());
+#endif // VERBOSE
 
     // Show type errors if any occurred
     if (parser.hasTypeErrors()) {
         Printer::printTypeErrors(parser.getTypeErrors());
-        std::cout << "Execution skipped due to type errors." << std::endl;
-    } else {
-        // Step 3: Execution using the simplified interpreter
-        std::cout << "=========" << std::endl;
-        std::cout << "EXECUTION" << std::endl;
-        std::cout << "=========" << std::endl;
-
-        Interpreter interpreter;
-        try {
-            interpreter.execute(parser.getCommands(), parser.getVariableTypes());
-        } catch (const std::runtime_error& e) {
-            std::cerr << "Interpreter error: " << e.what() << std::endl;
-            exit(EXIT_FAILURE);
-        }
-
-        // Print final state
-        interpreter.printState();
+        std::cerr << "Execution skipped due to type errors." << std::endl;
+        exit(EXIT_FAILURE);
     }
+
+#ifdef VERBOSE
+    // Step 3: Execution using the simplified interpreter
+    std::cout << "=========" << std::endl;
+    std::cout << "EXECUTION" << std::endl;
+    std::cout << "=========" << std::endl;
+#endif // VERBOSE
+
+    Interpreter interpreter;
+    try {
+        interpreter.execute(parser.getCommands(), parser.getVariableTypes());
+    } catch (const std::runtime_error& e) {
+        std::cerr << "Interpreter error: " << e.what() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+#ifdef VERBOSE
+    // Print final state
+    interpreter.printState();
+#endif // VERBOSE
 
     return 0;
 }

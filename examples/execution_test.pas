@@ -29,7 +29,7 @@ begin
     writeln("i mod j = ", k);
 
     // Test 2: Real arithmetic
-    writeln("Test 2: Real arithmetic");
+    writeln("\nTest 2: Real arithmetic");
 
     r := 10.5;
     s := 3.2;
@@ -57,16 +57,26 @@ begin
     writeln(t);
 
     // Test 3: Mixed arithmetic (integer to real)
-    writeln("Test 3: Mixed arithmetic");
+    writeln("\nTest 3: Mixed arithmetic");
+    s := 1.5;
+    i := 5;
+
+    write("s = ");
+    writeln(s);
+
+    write("i = ");
+    writeln(i);
+
     r := i + s;
     write("i + s = ");
     writeln(r);
+
     r := i * s;
     write("i * s = ");
     writeln(r);
 
     // Test 4: Integer comparisons
-    writeln("Test 4: Integer comparisons");
+    writeln("\nTest 4: Integer comparisons");
 
     i := 10;
     j := 5;
@@ -101,7 +111,7 @@ begin
     writeln(k);
 
     // Test 5: Real comparisons
-    writeln("Test 5: Real comparisons");
+    writeln("\nTest 5: Real comparisons");
     r := 10.5;
     s := 10.5;
 
@@ -112,30 +122,30 @@ begin
 
     write("r < s = ");
     t :=  r < s;
-    writeln("r < s = ");
+    writeln(t);
 
     write("r <= s = ");
     t :=  r <= s;
-    writeln("r <= s = ");
+    writeln(t);
 
     write("r > s = ");
     t :=  r > s;
-    writeln("r > s = ");
+    writeln(t);
 
     write("r >= s = ");
     t :=  r >= s;
-    writeln("r >= s = ");
+    writeln(t);
 
     write("r = s = ");
     t :=  r = s;
-    writeln("r = s = ");
+    writeln(t);
 
     write("r <> s = ");
     t :=  r <> s;
-    writeln("r <> s = ");
+    writeln(t);
 
     // Test 6: Control flow
-    writeln("Test 6: Control flow");
+    writeln("\nTest 6: Control flow");
     i := 5;
     write("i = ");
     writeln(i);
@@ -151,10 +161,17 @@ begin
         writeln("i is not less than 8");
 
     // Test 7: Complex expressions
-    writeln("Test 7: Complex expressions");
+    writeln("\nTest 7: Complex expressions");
     i := 10;
-    j := 5;
+    j := 4;
     r := 2.5;
+
+    write("i = ");
+    writeln(i);
+    write("j = ");
+    writeln(j);
+    write("r = ");
+    writeln(r);
 
     result := (i + j) * 2;
     write("(i + j) * 2 = ");
@@ -165,7 +182,7 @@ begin
     writeln(result);
 
     // Test 8: Type conversions in expressions
-    writeln("Test 8: Type conversions");
+    writeln("\nTest 8: Type conversions");
     i := 7;
     r := 3.5;
 
@@ -183,13 +200,13 @@ begin
     writeln(t);
 
     // Test 9: Edge cases
-    writeln("Test 9: Edge cases");
+    writeln("\nTest 9: Edge cases");
     i := 0;
     j := 1;
 
-    writeln("i = ");
+    write("i = ");
     writeln(i);
-    writeln("j = ");
+    write("j = ");
     writeln(j);
 
     write("not i = ");

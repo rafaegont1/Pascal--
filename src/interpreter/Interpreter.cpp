@@ -1,7 +1,7 @@
-#include "Pascal--/interpreter/Interpreter.hpp"
 #include <iostream>
 #include <functional>
 #include <stdexcept>
+#include "Pascal--/interpreter/Interpreter.hpp"
 
 Interpreter::Interpreter() {
 }
