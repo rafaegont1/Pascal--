@@ -2,6 +2,7 @@
 #include <functional>
 #include <stdexcept>
 #include "Pascal--/interpreter/Interpreter.hpp"
+#include "Pascal--/syntactic/Parser.hpp"
 
 Interpreter::Interpreter() {
 }
@@ -307,9 +308,26 @@ void Interpreter::executeIO(const Command& cmd) {
 
     switch (callType) {
         case Command::CallType::READ: {
-            int64_t value;
-            std::cin >> value;
-            m_variables[operand] = value;
+            switch (m_variableTypes[operand].type) {
+                case VarType::INTEGER: {
+                    int64_t value;
+                    std::cin >> value;
+                    m_variables[operand] = value;
+                    break;
+                }
+                case VarType::REAL: {
+                    double value;
+                    std::cin >> value;
+                    m_variables[operand] = value;
+                    break;
+                }
+                case VarType::STRING: {
+                    std::string value;
+                    std::cin >> value;
+                    m_variables[operand] = value;
+                    break;
+                }
+            }
             break;
         }
         case Command::CallType::WRITE: {
@@ -322,9 +340,28 @@ void Interpreter::executeIO(const Command& cmd) {
             break;
         }
         case Command::CallType::READLN: {
-            std::string value;
-            std::getline(std::cin, value);
-            m_variables[operand] = value;
+            switch (m_variableTypes[operand].type) {
+                case VarType::INTEGER: {
+                    int64_t value;
+                    std::cin >> value;
+                    m_variables[operand] = value;
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    break;
+                }
+                case VarType::REAL: {
+                    double value;
+                    std::cin >> value;
+                    m_variables[operand] = value;
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    break;
+                }
+                case VarType::STRING: {
+                    std::string value;
+                    std::getline(std::cin, value);
+                    m_variables[operand] = value;
+                    break;
+                }
+            }
             break;
         }
         case Command::CallType::WRITELN: {

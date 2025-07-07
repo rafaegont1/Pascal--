@@ -8,6 +8,7 @@
 #include <vector>
 #include <variant>
 #include <functional>
+#include <limits>
 
 class Interpreter {
 public:
@@ -19,7 +20,7 @@ public:
     // Execute commands
     void execute(const std::vector<Command>& commands);
     void execute(const std::vector<Command>& commands,
-                 const std::unordered_map<std::string, VariableInfo>& variableTypes);
+        const std::unordered_map<std::string, VariableInfo>& variableTypes);
 
     // Get execution results
     const std::unordered_map<std::string, VarValue>& getVariables() const { return m_variables; }
