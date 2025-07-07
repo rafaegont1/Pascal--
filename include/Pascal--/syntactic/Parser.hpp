@@ -11,6 +11,7 @@
 
 // Type system
 enum class VarType : uint8_t { INTEGER, REAL, STRING };
+enum class WriteNewLine : uint8_t { YES, NO };
 
 struct VariableInfo {
     VarType type;
@@ -96,9 +97,9 @@ private:
     void proc_endFor();
     // IO commands
     void proc_ioStmt();
-    void proc_outList(const std::string& writeType = "WRITE");
-    void proc_restoOutList(const std::string& writeType = "WRITE");
-    void proc_out(const std::string& writeType = "WRITE");
+    void proc_outList(WriteNewLine new_line);
+    void proc_restoOutList(WriteNewLine new_line);
+    void proc_out(WriteNewLine new_line);
     void proc_whileStmt();
     void proc_ifStmt(const std::string& endLabel = "");
     void proc_elsePart(const std::string& endLabel = "");

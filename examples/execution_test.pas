@@ -1,159 +1,212 @@
-program execution_test;
+program execution;
 var
     i, j, k: integer;
-    r, s: real;
+    r, s, t: real;
     str1, str2: string;
     result: integer;
 begin
-    writeln('=== EXECUTION TEST START ===');
-    
+    writeln("=== EXECUTION TEST START ===");
+
     // Test 1: Basic integer arithmetic
-    writeln('Test 1: Integer arithmetic');
+    writeln("Test 1: Integer arithmetic");
     i := 10;
     j := 5;
     k := i + j;
-    writeln('i = ', i);
-    writeln('j = ', j);
-    writeln('i + j = ', k);
-    
+    writeln("i = ", i);
+    writeln("j = ", j);
+    writeln("i + j = ", k);
+
     k := i - j;
-    writeln('i - j = ', k);
-    
+    writeln("i - j = ", k);
+
     k := i * j;
-    writeln('i * j = ', k);
-    
+    writeln("i * j = ", k);
+
     k := i div j;
-    writeln('i div j = ', k);
-    
+    writeln("i div j = ", k);
+
     k := i mod j;
-    writeln('i mod j = ', k);
-    
+    writeln("i mod j = ", k);
+
     // Test 2: Real arithmetic
-    writeln;
-    writeln('Test 2: Real arithmetic');
+    writeln("Test 2: Real arithmetic");
+
     r := 10.5;
     s := 3.2;
-    writeln('r = ', r);
-    writeln('s = ', s);
-    writeln('r + s = ', r + s);
-    writeln('r - s = ', r - s);
-    writeln('r * s = ', r * s);
-    writeln('r / s = ', r / s);
-    
+
+    write("r = ");
+    writeln(r);
+
+    write("s = ");
+    writeln(s);
+
+    write("r + s = ");
+    t :=  r + s;
+    writeln(t);
+
+    write("r - s = ");
+    t :=  r - s;
+    writeln(t);
+
+    write("r * s = ");
+    t :=  r * s;
+    writeln(t);
+
+    write("r / s = ");
+    t :=  r / s;
+    writeln(t);
+
     // Test 3: Mixed arithmetic (integer to real)
-    writeln;
-    writeln('Test 3: Mixed arithmetic');
+    writeln("Test 3: Mixed arithmetic");
     r := i + s;
-    writeln('i + s = ', r);
+    write("i + s = ");
+    writeln(r);
     r := i * s;
-    writeln('i * s = ', r);
-    
-    // Test 4: String operations
-    writeln;
-    writeln('Test 4: String operations');
-    str1 := 'Hello';
-    str2 := ' World';
-    writeln('str1 = ', str1);
-    writeln('str2 = ', str2);
-    writeln('str1 + str2 = ', str1 + str2);
-    
-    // Test 5: Integer comparisons
-    writeln;
-    writeln('Test 5: Integer comparisons');
+    write("i * s = ");
+    writeln(r);
+
+    // Test 4: Integer comparisons
+    writeln("Test 4: Integer comparisons");
+
     i := 10;
     j := 5;
-    writeln('i = ', i, ', j = ', j);
-    writeln('i < j = ', i < j);
-    writeln('i <= j = ', i <= j);
-    writeln('i > j = ', i > j);
-    writeln('i >= j = ', i >= j);
-    writeln('i = j = ', i = j);
-    writeln('i <> j = ', i <> j);
-    
-    // Test 6: Real comparisons
-    writeln;
-    writeln('Test 6: Real comparisons');
+
+    write("i = ", i);
+    writeln(i);
+    write("j = ");
+    writeln(j);
+
+    write("i < j = ");
+    k :=  i < j;
+    writeln(k);
+
+    write("i <= j = ");
+    k :=  i <= j;
+    writeln(k);
+
+    write("i > j = ");
+    k :=  i > j;
+    writeln(k);
+
+    write("i >= j = ");
+    k :=  i >= j;
+    writeln(k);
+
+    write("i = j = ");
+    k :=  i = j;
+    writeln(k);
+
+    write("i <> j = ");
+    k :=  i <> j;
+    writeln(k);
+
+    // Test 5: Real comparisons
+    writeln("Test 5: Real comparisons");
     r := 10.5;
     s := 10.5;
-    writeln('r = ', r, ', s = ', s);
-    writeln('r < s = ', r < s);
-    writeln('r <= s = ', r <= s);
-    writeln('r > s = ', r > s);
-    writeln('r >= s = ', r >= s);
-    writeln('r = s = ', r = s);
-    writeln('r <> s = ', r <> s);
-    
-    // Test 7: String comparisons
-    writeln;
-    writeln('Test 7: String comparisons');
-    str1 := 'apple';
-    str2 := 'banana';
-    writeln('str1 = ', str1, ', str2 = ', str2);
-    writeln('str1 < str2 = ', str1 < str2);
-    writeln('str1 <= str2 = ', str1 <= str2);
-    writeln('str1 > str2 = ', str1 > str2);
-    writeln('str1 >= str2 = ', str1 >= str2);
-    writeln('str1 = str2 = ', str1 = str2);
-    writeln('str1 <> str2 = ', str1 <> str2);
-    
-    // Test 8: Logical operations
-    writeln;
-    writeln('Test 8: Logical operations');
-    i := 1;  // true
-    j := 0;  // false
-    writeln('i = ', i, ' (true), j = ', j, ' (false)');
-    writeln('not i = ', not i);
-    writeln('not j = ', not j);
-    writeln('i and j = ', i and j);
-    writeln('i or j = ', i or j);
-    writeln('i and i = ', i and i);
-    writeln('j or j = ', j or j);
-    
-    // Test 9: Control flow
-    writeln;
-    writeln('Test 9: Control flow');
+
+    write("r = ");
+    writeln(r);
+    write("s = ");
+    writeln(s);
+
+    write("r < s = ");
+    t :=  r < s;
+    writeln("r < s = ");
+
+    write("r <= s = ");
+    t :=  r <= s;
+    writeln("r <= s = ");
+
+    write("r > s = ");
+    t :=  r > s;
+    writeln("r > s = ");
+
+    write("r >= s = ");
+    t :=  r >= s;
+    writeln("r >= s = ");
+
+    write("r = s = ");
+    t :=  r = s;
+    writeln("r = s = ");
+
+    write("r <> s = ");
+    t :=  r <> s;
+    writeln("r <> s = ");
+
+    // Test 6: Control flow
+    writeln("Test 6: Control flow");
     i := 5;
+    write("i = ");
+    writeln(i);
+
     if i > 3 then
-        writeln('i is greater than 3')
+        writeln("i is greater than 3");
     else
-        writeln('i is not greater than 3');
-    
-    if i < 3 then
-        writeln('i is less than 3')
+        writeln("i is not greater than 3");
+
+    if i < 8 then
+        writeln("i is less than 8");
     else
-        writeln('i is not less than 3');
-    
-    // Test 10: Complex expressions
-    writeln;
-    writeln('Test 10: Complex expressions');
+        writeln("i is not less than 8");
+
+    // Test 7: Complex expressions
+    writeln("Test 7: Complex expressions");
     i := 10;
     j := 5;
     r := 2.5;
+
     result := (i + j) * 2;
-    writeln('(i + j) * 2 = ', result);
-    
+    write("(i + j) * 2 = ");
+    writeln(result);
+
     result := i div j + 1;
-    writeln('i div j + 1 = ', result);
-    
-    // Test 11: Type conversions in expressions
-    writeln;
-    writeln('Test 11: Type conversions');
+    write("i div j + 1 = ");
+    writeln(result);
+
+    // Test 8: Type conversions in expressions
+    writeln("Test 8: Type conversions");
     i := 7;
     r := 3.5;
-    writeln('i = ', i, ', r = ', r);
-    writeln('i + r = ', i + r);
-    writeln('i * r = ', i * r);
-    
-    // Test 12: Edge cases
-    writeln;
-    writeln('Test 12: Edge cases');
+
+    write("i = ");
+    writeln(i);
+    write("r = ");
+    writeln(r);
+
+    write("i + r = ");
+    t := i + r;
+    writeln(t);
+
+    write("i * r = ");
+    t := i * r;
+    writeln(t);
+
+    // Test 9: Edge cases
+    writeln("Test 9: Edge cases");
     i := 0;
     j := 1;
-    writeln('i = ', i, ', j = ', j);
-    writeln('not i = ', not i);
-    writeln('not j = ', not j);
-    writeln('i and j = ', i and j);
-    writeln('i or j = ', i or j);
-    
-    writeln('=== EXECUTION TEST END ===');
-end. 
+
+    writeln("i = ");
+    writeln(i);
+    writeln("j = ");
+    writeln(j);
+
+    write("not i = ");
+    k := not i;
+    writeln(k);
+
+    write("not j = ");
+    k := not j;
+    writeln(k);
+
+    write("i and j = ");
+    k := i and j;
+    writeln(k);
+
+    write("i or j = ");
+    k := i or j;
+    writeln(k);
+
+    writeln("=== EXECUTION TEST END ===");
+end.

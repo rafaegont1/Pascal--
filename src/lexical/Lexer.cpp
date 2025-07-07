@@ -151,13 +151,13 @@ Lexeme Lexer::make_lexeme() {
                     lexeme.line = m_file.line();
                     lexeme.column = m_file.column();
                     lexeme.type = SymbolTable::find(lexeme.token);
-                    c = m_file.advance();
                     if (lexeme.type == TT_INVALID) {
                         throw CompilerError(
-                            "invalid token",
+                            "invalid '" + std::string(1, c) + "' punct character",
                             lexeme.line, lexeme.column
                         );
                     }
+                    c = m_file.advance();
                     state = STATE_FINAL;
 
                 // end of file or invalid character
@@ -169,8 +169,8 @@ Lexeme Lexer::make_lexeme() {
                         state = STATE_FINAL;
                     } else {
                         throw CompilerError(
-                            "invalid token",
-                            lexeme.line, lexeme.column
+                            "invalid '" + std::string(1, c) + "' character",
+                            m_file.line(), m_file.column()
                         );
                     }
                 }
@@ -429,7 +429,7 @@ Lexeme Lexer::make_lexeme() {
 
             default:
                 throw CompilerError(
-                    "invalid '" + std::to_string(state) + "' state number in lexer", 
+                    "invalid '" + std::to_string(state) + "' state number in lexer",
                     lexeme.line, lexeme.column
                 );
         }

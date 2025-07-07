@@ -315,7 +315,7 @@ void Parser::proc_ioStmt() {
         case TT_WRITE: {
             consume(TT_WRITE);
             consume(TT_LPAREN);
-            proc_outList("WRITE");
+            proc_outList(WriteNewLine::NO);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
             break;
@@ -333,7 +333,7 @@ void Parser::proc_ioStmt() {
         case TT_WRITELN: {
             consume(TT_WRITELN);
             consume(TT_LPAREN);
-            proc_outList("WRITELN");
+            proc_outList(WriteNewLine::YES);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
             break;
@@ -347,13 +347,13 @@ void Parser::proc_ioStmt() {
 }
 
 // <outList> -> <out><restoOutList>;
-void Parser::proc_outList(const std::string& writeType) {
-    proc_out(writeType);
-    proc_restoOutList(writeType);
+void Parser::proc_outList(WriteNewLine new_line) {
+    proc_out(new_line);
+    proc_restoOutList(new_line);
 }
 
 // <restoOutList> -> ',' <outList> | &;
-void Parser::proc_restoOutList(const std::string& writeType) {
+void Parser::proc_restoOutList(WriteNewLine new_line) {
     if (m_lexeme->type == TT_COMMA) {
         consume(TT_COMMA);
 
@@ -364,8 +364,8 @@ void Parser::proc_restoOutList(const std::string& writeType) {
             case TT_LITERAL_DEC:
             case TT_LITERAL_HEX:
             case TT_LITERAL_REAL:
-                proc_out(writeType);
-                proc_restoOutList(writeType);
+                proc_out(new_line);
+                proc_restoOutList(new_line);
                 break;
 
             default:
@@ -375,10 +375,10 @@ void Parser::proc_restoOutList(const std::string& writeType) {
 }
 
 // <out> -> 'STR' | 'IDENT' | 'NUMint' | 'NUMfloat' ;
-void Parser::proc_out(const std::string& writeType) {
+void Parser::proc_out(WriteNewLine new_line) {
     Command::CallType callType;
 
-    if (writeType == "WRITELN") {
+    if (new_line == WriteNewLine::YES) {
         // Check if this is the last argument by looking ahead
         auto lookahead = m_lexeme + 1;
         // If there's a comma after this token, it's not the last
@@ -483,8 +483,13 @@ void Parser::proc_elsePart(const std::string& endLabel) {
         } else {
             switch (m_lexeme->type) {
                 case TT_FOR:
+                case TT_READ:
+                case TT_WRITE:
+                case TT_READLN:
+                case TT_WRITELN:
                 case TT_WHILE:
                 case TT_IDENT:
+                case TT_IF:
                 case TT_BEGIN:
                 case TT_BREAK:
                 case TT_CONTINUE:
@@ -493,7 +498,7 @@ void Parser::proc_elsePart(const std::string& endLabel) {
                     break;
                 default:
                     throw CompilerError(
-                        "Invalid else statment",
+                        "Invalid else statement",
                         m_lexeme->line, m_lexeme->column
                     );
             }
@@ -847,8 +852,10 @@ void Parser::addCommand(
     m_commands.push_back(cmd);
 }
 
-void Parser::addCommand(Command::Mnemonic mnemonic, Command::CallType callType,
-    const std::string& src1, Command::WriteType writeType) {
+void Parser::addCommand(
+    Command::Mnemonic mnemonic, Command::CallType callType,
+    const std::string& src1, Command::WriteType writeType
+) {
     Command cmd;
     cmd.mnemonic = mnemonic;
     cmd.dst = callType;
