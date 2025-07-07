@@ -19,6 +19,9 @@ void Interpreter::execute(
     m_labels.clear();
     m_variableTypes = variableTypes;
 
+    // Init variables with zeroes
+    initVariables();
+
     // Build label map for jumps
     buildLabelMap(commands);
 
@@ -68,6 +71,24 @@ void Interpreter::execute(
     }
 }
 
+void Interpreter::initVariables() {
+    for (const auto& v : m_variableTypes) {
+        const VariableInfo var = v.second;
+
+        switch (var.type) {
+            case VarType::INTEGER:
+                m_variables[var.name] = 0;
+                break;
+            case VarType::REAL:
+                m_variables[var.name] = 0.0;
+                break;
+            case VarType::STRING:
+                m_variables[var.name] = "";
+                break;
+        }
+    }
+}
+
 void Interpreter::buildLabelMap(const std::vector<Command>& commands) {
     for (auto it = commands.begin(); it != commands.end(); ++it) {
         if (it->mnemonic == Command::Mnemonic::LABEL) {
@@ -91,11 +112,11 @@ Interpreter::VarValue Interpreter::resolveOperand(const Command::Source& operand
             // Try to parse as number with different bases
             try {
                 // Check for hexadecimal (0x prefix)
-                if (arg.size() > 2 && arg[0] == '0' && (arg[1] == 'x' || arg[1] == 'X')) {
+                if (arg.size() > 2 && arg[0] == '0' && arg[1] == 'x') {
                     return static_cast<int64_t>(std::stoul(arg, nullptr, 16));
                 }
                 // Check for octal (leading 0)
-                else if (arg.size() > 1 && arg[0] == '0' && arg.find('.') == std::string::npos) {
+                else if (arg.size() > 1 && arg[0] == '0') {
                     return static_cast<int64_t>(std::stoul(arg, nullptr, 8));
                 }
                 // Regular decimal number

@@ -952,8 +952,9 @@ bool Parser::isTypeCompatible(VarType expectedType, VarType actualType) {
     }
 
     // Type promotions
-    if (expectedType == VarType::REAL && actualType == VarType::INTEGER) {
-        return true; // Integer can be promoted to real
+    if ((expectedType == VarType::REAL || expectedType == VarType::INTEGER)
+        || (actualType == VarType::REAL || actualType == VarType::INTEGER)) {
+        return true; // Integer can be promoted to real and vice versa
     }
 
     return false;

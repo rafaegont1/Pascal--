@@ -4,6 +4,8 @@ var
 begin
   soma := 0;
   for i := 1 to 5 do
+    writeln("continuing...");
+    continue;
     soma := soma + i;
   writeln("Soma = ", soma);
 end.
