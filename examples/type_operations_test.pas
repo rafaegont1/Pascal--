@@ -1,4 +1,4 @@
-program tye;
+program type;
 
 var
   a, b, c: integer;
@@ -7,81 +7,133 @@ var
 
 begin
   { Integer operations }
+  writeln("---> Integer operations <---");
   a := 10;
   b := 3;
+
+  write("a = ");
+  writeln(a);
+  write("b = ");
+  writeln(b);
+
   c := a + b;
-  writeln("Integer addition: ", c);
+  write("a + b = ");
+  writeln(c);
 
   c := a - b;
-  writeln("Integer subtraction: ", c);
+  write("a - b = ");
+  writeln(c);
 
   c := a * b;
-  writeln("Integer multiplication: ", c);
+  write("a * b = ");
+  writeln(c);
 
   c := a div b;
-  writeln("Integer division: ", c);
+  write("a div b = ");
+  writeln(c);
 
   c := a mod b;
-  writeln("Integer modulo: ", c);
+  write("a mod b = ");
+  writeln(c);
 
   { Real operations }
+  writeln("\n---> Real operations <---");
   x := 10.5;
   y := 3.2;
+
+  write("x = ");
+  writeln(x);
+  write("y = ");
+  writeln(y);
+
   z := x + y;
-  writeln("Real addition: ", z);
+  write("x + y = ");
+  writeln(z);
 
   z := x - y;
-  writeln("Real subtraction: ", z);
+  write("x - y = ");
+  writeln(z);
 
   z := x * y;
-  writeln("Real multiplication: ", z);
+  write("x * y = ");
+  writeln(z);
 
   z := x / y;
-  writeln("Real division: ", z);
+  write("x / y = ");
+  writeln(z);
 
   { Mixed operations (integer to real) }
+  writeln("\n---> Mixed operations (integer to real) <---");
   z := a + x;
-  writeln("Mixed addition (int + real): ", z);
+  write("a + x = ");
+  writeln(z);
 
   z := x + a;
-  writeln("Mixed addition (real + int): ", z);
-
-  { String operations }
-  msg1 := "Hello";
-  msg2 := "World";
-  msg1 := msg1 + msg2;
-  writeln("String concatenation: ", msg1);
+  write("x + a = ");
+  writeln(z);
 
   { Comparisons }
+  writeln("\n---> Comparisons <---");
+
+  a := 1;
+  b := 2;
+  x := 3.0;
+  y := 4.0;
+
+  write("a = ");
+  writeln(a);
+  write("b = ");
+  writeln(b);
+  write("x = ");
+  writeln(x);
+  write("y = ");
+  writeln(y);
+
   if a > b then
     writeln("Integer comparison (a > b): true");
+  else
+    writeln("Integer comparison (a > b): false");
 
   if x > y then
     writeln("Real comparison (x > y): true");
+  else
+    writeln("Real comparison (x > y): false");
 
   if a = 10 then
     writeln("Integer equality (a = 10): true");
+  else
+    writeln("Integer equality (a = 10): false");
 
   if x = 10.5 then
     writeln("Real equality (x = 10.5): true");
+  else
+    writeln("Real equality (x = 10.5): false");
 
-  if msg1 = "HelloWorld" then
-    writeln("String equality: true");
-
-  { Type conversion tests }
-  c := 15;
-  x := c;  { integer to real }
-  writeln("Integer to real conversion: ", x);
-
-  { Edge cases }
   if a <> b then
     writeln("Integer inequality (a <> b): true");
+  else
+    writeln("Integer inequality (a <> b): false");
 
   if x >= y then
     writeln("Real greater or equal (x >= y): true");
+  else
+    writeln("Real greater or equal (x >= y): false");
 
   if a <= 15 then
     writeln("Integer less or equal (a <= 15): true");
+  else
+    writeln("Integer less or equal (a <= 15): false");
+
+  { Type conversion tests }
+  writeln("\n---> Type conversion tests <---");
+
+  x := 15.2;
+  write("x = ");
+  writeln(x);
+
+  c := x;  { real to integer }
+  write("c = x = ");
+  writeln(c);
 
   writeln("Type operations test completed!");
 end.

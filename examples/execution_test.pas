@@ -168,14 +168,11 @@ begin
     writeln("\nTest 7: Complex expressions");
     i := 10;
     j := 4;
-    r := 2.5;
 
     write("i = ");
     writeln(i);
     write("j = ");
     writeln(j);
-    write("r = ");
-    writeln(r);
 
     result := (i + j) * 2;
     write("(i + j) * 2 = ");

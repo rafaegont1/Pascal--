@@ -158,9 +158,42 @@ bool Interpreter::isTypeCompatible(VarType expectedType, const VarValue& value) 
 void Interpreter::executeAssignment(const Command& cmd) {
     const std::string& varName = std::get<std::string>(cmd.dst);
     VarValue value = resolveOperand(cmd.src1);
+    VarType type = m_variableTypes[varName].type;
 
     validateAssignment(varName, value);
-    m_variables[varName] = value;
+
+    // NOTE: eu coloquei essa parte de baixo pra fazer a conversão integer<->real,
+    // e não sei se com isso o `validateAssignment` ficou redundante
+    if (auto integer = std::get_if<int64_t>(&value)) {
+        switch (type) {
+            case VarType::INTEGER:
+                m_variables[varName] = *integer;
+                break;
+            case VarType::REAL:
+                m_variables[varName] = static_cast<double>(*integer);
+                break;
+            default:
+                throw std::runtime_error("Type mismatch: cannot assign integer to string");
+        }
+    } else if (auto real = std::get_if<double>(&value)) {
+        switch (type) {
+            case VarType::INTEGER:
+                m_variables[varName] = static_cast<int64_t>(*real);
+                break;
+            case VarType::REAL:
+                m_variables[varName] = *real;
+                break;
+            default:
+                throw std::runtime_error("Type mismatch: cannot assign real to string");
+        }
+    } else if (auto str = std::get_if<std::string>(&value)) {
+        if (type != VarType::STRING) {
+            throw std::runtime_error("Type mismatch: cannot assign string to numeric variable");
+        }
+        m_variables[varName] = *str;
+    } else {
+        throw std::runtime_error("Unsupported variant type");
+    }
 }
 
 void Interpreter::executeArithmetic(const Command& cmd) {
