@@ -11,9 +11,13 @@ begin
     writeln("Test 1: Integer arithmetic");
     i := 10;
     j := 5;
-    k := i + j;
     writeln("i = ", i);
     writeln("j = ", j);
+
+    k := 1 + 1 + 1;
+    writeln("1 + 1 + 1 = ", k);
+
+    k := i + j;
     writeln("i + j = ", k);
 
     k := i - j;

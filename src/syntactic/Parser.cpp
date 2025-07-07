@@ -541,6 +541,11 @@ void Parser::proc_restoOr() {
         consume(TT_OR);
         proc_and();
         proc_restoOr();
+        std::string right = popExpression();
+        std::string left = popExpression();
+        std::string temp = generateTemp();
+        addCommand(Command::Mnemonic::OR, "TEMP:" + temp, left, right);
+        pushExpression("TEMP:" + temp);
     }
 }
 
@@ -556,6 +561,11 @@ void Parser::proc_restoAnd() {
         consume(TT_AND);
         proc_and();
         proc_restoAnd();
+        std::string right = popExpression();
+        std::string left = popExpression();
+        std::string temp = generateTemp();
+        addCommand(Command::Mnemonic::AND, "TEMP:" + temp, left, right);
+        pushExpression("TEMP:" + temp);
     }
 }
 
@@ -564,6 +574,10 @@ void Parser::proc_not() {
     if (m_lexeme->type == TT_NOT) {
         consume(TT_NOT);
         proc_not();
+        std::string operand = popExpression();
+        std::string temp = generateTemp();
+        addCommand(Command::Mnemonic::NOT, "TEMP:" + temp, operand);
+        pushExpression("TEMP:" + temp);
     } else {
         proc_rel();
     }
