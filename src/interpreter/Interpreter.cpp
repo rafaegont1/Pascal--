@@ -87,44 +87,39 @@ Interpreter::VarValue Interpreter::resolveOperand(const Command::Source& operand
             if (it != m_variables.end()) {
                 return it->second;
             }
-            // If not found, try to parse as number first
 
-            // Check if it looks like a number first
-            bool hasDigit = false;
-            bool hasDot = false;
-            bool isValidNumber = true;
-
-            for (char c : arg) {
-                if (std::isdigit(c)) {
-                    hasDigit = true;
-                } else if (c == '.' && !hasDot) {
-                    hasDot = true;
-                } else if (c == '-' || c == '+') {
-                    // Allow sign at beginning
-                    continue;
-                } else {
-                    isValidNumber = false;
-                    break;
+            // Try to parse as number with different bases
+            try {
+                // Check for hexadecimal (0x prefix)
+                if (arg.size() > 2 && arg[0] == '0' && (arg[1] == 'x' || arg[1] == 'X')) {
+                    return static_cast<int64_t>(std::stoul(arg, nullptr, 16));
                 }
-            }
-
-            if (isValidNumber && hasDigit) {
-                try {
-                    if (hasDot) {
-                        // Try to parse as double
-                        return std::stod(arg);
-                    } else {
-                        // Try to parse as integer
-                        return std::stoll(arg);
+                // Check for octal (leading 0)
+                else if (arg.size() > 1 && arg[0] == '0' && arg.find('.') == std::string::npos) {
+                    return static_cast<int64_t>(std::stoul(arg, nullptr, 8));
+                }
+                // Regular decimal number
+                else {
+                    size_t pos;
+                    double d = std::stod(arg, &pos);
+                    // If entire string was consumed, it's a pure number
+                    if (pos == arg.size()) {
+                        // Check if it's integer or real
+                        if (arg.find('.') != std::string::npos || 
+                            arg.find('e') != std::string::npos ||
+                            arg.find('E') != std::string::npos) {
+                            return d;
+                        } else {
+                            return static_cast<int64_t>(d);
+                        }
                     }
-                } catch (...) {
-                    // Parsing failed, treat as string
-                    return arg;
                 }
-            } else {
-                // Not a number format, treat as string literal
-                return arg;
+            } catch (...) {
+                // Parsing failed, treat as string
             }
+
+            // Not a number format, treat as string literal
+            return arg;
         } else if constexpr (std::is_same_v<T, int64_t> || std::is_same_v<T, double>) {
             return arg;
         } else if constexpr (std::is_same_v<T, std::monostate>) {

@@ -1,9 +1,9 @@
 program SomaSimples;
 var
-  i, soma, j: integer;
+  i, soma: integer;
 begin
   soma := 0;
-  for j := 1 to 5 do
-    soma := soma + j;
+  for i := 1 to 5 do
+    soma := soma + i;
   writeln("Soma = ", soma);
 end.
