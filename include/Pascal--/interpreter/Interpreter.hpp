@@ -34,7 +34,6 @@ private:
     std::unordered_map<std::string, VariableInfo> m_variableTypes;
 
     // Helper methods
-    void initVariables();
     void buildLabelMap(const std::vector<Command>& commands);
     VarValue resolveOperand(const Command::Source& operand);
     void validateAssignment(const std::string& varName, const VarValue& value);

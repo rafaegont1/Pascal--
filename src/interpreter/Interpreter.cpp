@@ -19,9 +19,6 @@ void Interpreter::execute(
     m_labels.clear();
     m_variableTypes = variableTypes;
 
-    // Init variables with zeroes
-    initVariables();
-
     // Build label map for jumps
     buildLabelMap(commands);
 
@@ -66,24 +63,6 @@ void Interpreter::execute(
 
             case Command::Mnemonic::CALL:
                 executeIO(cmd);
-                break;
-        }
-    }
-}
-
-void Interpreter::initVariables() {
-    for (const auto& v : m_variableTypes) {
-        const VariableInfo var = v.second;
-
-        switch (var.type) {
-            case VarType::INTEGER:
-                m_variables[var.name] = 0;
-                break;
-            case VarType::REAL:
-                m_variables[var.name] = 0.0;
-                break;
-            case VarType::STRING:
-                m_variables[var.name] = "";
                 break;
         }
     }

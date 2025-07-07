@@ -1,4 +1,5 @@
 #include "Pascal--/syntactic/Parser.hpp"
+#include "Pascal--/interpreter/Command.hpp"
 #include "Pascal--/util/exception.hpp"
 #include "Pascal--/util/Printer.hpp"
 
@@ -67,6 +68,17 @@ void Parser::proc_declaration() {
     // Store type information for all declared variables
     for (const auto& varName : varNames) {
         m_variableTypes[varName] = VariableInfo(type, varName);
+        switch (type) {
+            case VarType::INTEGER:
+                addCommand(Command::Mnemonic::ASSIGN, varName, "0");
+                break;
+            case VarType::REAL:
+                addCommand(Command::Mnemonic::ASSIGN, varName, "0.0");
+                break;
+            case VarType::STRING:
+                addCommand(Command::Mnemonic::ASSIGN, varName, "");
+                break;
+        }
     }
 }
 
