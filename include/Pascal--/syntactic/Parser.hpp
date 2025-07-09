@@ -68,6 +68,8 @@ private:
     VarType getValueType(const std::string& value);
     void addTypeError(const std::string& error);
 
+    void incrementFor(const std::string& loopVar, const std::string& incTemp);
+
     void consume(enum TokenType expected);
 
     // ------------------------------------
@@ -86,9 +88,17 @@ private:
     // ------------------------------------
     //  program statements
     // ------------------------------------
-    void proc_block();
-    void proc_stmtList();
-    void proc_stmt();
+    void proc_block(
+        const std::string& startLabel = "", const std::string& endLabel = "",
+        const std::string& loopVar = "", const std::string& incTemp = ""
+    );
+    void proc_stmtList(
+        const std::string& startLabel = "", const std::string& endLabel = "",
+        const std::string& loopVar = "", const std::string& incTemp = ""
+    );
+    void proc_stmt(
+        const std::string& startLabel = "", const std::string& endLabel = "",
+        const std::string& loopVar = "", const std::string& incTemp = "");
     // ---------------------------
     //  statement descriptions
     // ---------------------------

@@ -137,15 +137,21 @@ VarType Parser::proc_type() {
 // ------------------------------------
 
 // <block> -> 'begin' <stmtList> 'end' ';' ;
-void Parser::proc_block() {
+void Parser::proc_block(
+    const std::string& startLabel, const std::string& endLabel,
+    const std::string& loopVar, const std::string& incTemp
+) {
     consume(TT_BEGIN);
-    proc_stmtList();
+    proc_stmtList(startLabel, endLabel, loopVar, incTemp);
     consume(TT_END);
     consume(TT_SEMICOLON);
 }
 
 // <stmtList> -> <stmt> <stmtList> | & ;
-void Parser::proc_stmtList() {
+void Parser::proc_stmtList(
+    const std::string& startLabel, const std::string& endLabel,
+    const std::string& loopVar, const std::string& incTemp
+) {
     switch (m_lexeme->type) {
         case TT_FOR:
         case TT_READ:
@@ -159,8 +165,8 @@ void Parser::proc_stmtList() {
         case TT_BREAK:
         case TT_CONTINUE:
         case TT_SEMICOLON:
-            proc_stmt();
-            proc_stmtList();
+            proc_stmt(startLabel, endLabel, loopVar, incTemp);
+            proc_stmtList(startLabel, endLabel, loopVar, incTemp);
             break;
 
         default:
@@ -177,7 +183,10 @@ void Parser::proc_stmtList() {
 //    | 'break'';'
 //    | 'continue'';'
 //    | ';' ;
-void Parser::proc_stmt() {
+void Parser::proc_stmt(
+    const std::string& startLabel, const std::string& endLabel,
+    const std::string& loopVar, const std::string& incTemp
+) {
     switch (m_lexeme->type) {
         case TT_FOR:
             proc_forStmt();
@@ -204,17 +213,40 @@ void Parser::proc_stmt() {
             break;
 
         case TT_BEGIN:
-            proc_block();
+            proc_block(startLabel, endLabel, loopVar, incTemp);
             break;
 
         case TT_BREAK:
             consume(TT_BREAK);
             consume(TT_SEMICOLON);
+            if (endLabel.empty()) {
+                throw CompilerError("break keyword outside loop",
+                    m_lexeme->line, m_lexeme->column);
+            }
+            addCommand(Command::Mnemonic::JMP, endLabel);
+            // if (m_loopStartLabels.empty()) {
+            //     throw CompilerError("break keyword outside loop",
+            //         m_lexeme->line, m_lexeme->column);
+            // }
+            // addCommand(Command::Mnemonic::JMP, m_loopEndLabels.top());
             break;
 
         case TT_CONTINUE:
             consume(TT_CONTINUE);
             consume(TT_SEMICOLON);
+            if (startLabel.empty()) {
+                throw CompilerError("continue keyword outside loop",
+                    m_lexeme->line, m_lexeme->column);
+            }
+            if (!loopVar.empty()) {
+                incrementFor(loopVar, incTemp);
+            }
+            addCommand(Command::Mnemonic::JMP, startLabel);
+            // if (m_loopStartLabels.empty()) {
+            //     throw CompilerError("continue keyword outside loop",
+            //         m_lexeme->line, m_lexeme->column);
+            // }
+            // addCommand(Command::Mnemonic::JMP, m_loopStartLabels.top());
             break;
 
         case TT_SEMICOLON:
@@ -263,14 +295,14 @@ void Parser::proc_forStmt() {
     std::string condition = "TEMP:" + temp;
 
     addCommand(Command::Mnemonic::IF, condition, bodyLabel, endLabel);
-
     addCommand(Command::Mnemonic::LABEL, bodyLabel);
-    consume(TT_DO);
-    proc_stmt();
 
     std::string incTemp = generateTemp();
-    addCommand(Command::Mnemonic::ADD, "TEMP:" + incTemp, loopVar, "1");
-    addCommand(Command::Mnemonic::ASSIGN, loopVar, "TEMP:" + incTemp);
+
+    consume(TT_DO);
+    proc_stmt(startLabel, endLabel, loopVar, incTemp);
+
+    incrementFor(loopVar, incTemp);
 
     addCommand(Command::Mnemonic::JMP, startLabel);
     addCommand(Command::Mnemonic::LABEL, endLabel);
@@ -446,10 +478,10 @@ void Parser::proc_whileStmt() {
 
     // IF cond, bodyLabel, endLabel
     addCommand(Command::Mnemonic::IF, condition, bodyLabel, endLabel);
-
     addCommand(Command::Mnemonic::LABEL, bodyLabel);
+
     consume(TT_DO);
-    proc_stmt();
+    proc_stmt(startLabel, endLabel);
 
     addCommand(Command::Mnemonic::JMP, startLabel);
     addCommand(Command::Mnemonic::LABEL, endLabel);
@@ -988,4 +1020,11 @@ VarType Parser::getValueType(const std::string& value) {
         // If it's not a literal and not a declared variable, assume it's a string
         return VarType::STRING;
     }
+}
+
+void Parser::incrementFor(
+    const std::string& loopVar, const std::string& incTemp
+) {
+    addCommand(Command::Mnemonic::ADD, "TEMP:" + incTemp, loopVar, "1");
+    addCommand(Command::Mnemonic::ASSIGN, loopVar, "TEMP:" + incTemp);
 }
