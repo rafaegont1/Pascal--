@@ -60,11 +60,8 @@ private:
     bool isStringLiteral(const std::string& str);
 
     // Type checking methods
-    void validateExpr(const std::string& lhs, const std::string& rhs);
     void validateAssignment(const std::string& varName, const std::string& value);
-    bool isTypeCompatible(VarType type1, VarType type2);
     VarType getValueType(const std::string& value);
-    void addTypeError(const std::string& error);
     
     // Semantic analysis methods
     void validateComparison(const std::string& left, const std::string& right, const std::string& operator_);

@@ -427,14 +427,26 @@ Interpreter::VarValue Interpreter::addValues(const VarValue& left, const VarValu
         int64_t r = std::get<int64_t>(right);
         return l + r;
     }
+    // Try real addition
+    if (std::holds_alternative<double>(left) && std::holds_alternative<double>(right)) {
+        double l = std::get<double>(left);
+        double r = std::get<double>(right);
+        return l + r;
+    }
+    // Try mixed integer/real addition
+    if ((std::holds_alternative<int64_t>(left) && std::holds_alternative<double>(right)) ||
+        (std::holds_alternative<double>(left) && std::holds_alternative<int64_t>(right))) {
+        double l = toDouble(left);
+        double r = toDouble(right);
+        return l + r;
+    }
     // Try string concatenation
     if (std::holds_alternative<std::string>(left) && std::holds_alternative<std::string>(right)) {
         std::string l = std::get<std::string>(left);
         std::string r = std::get<std::string>(right);
         return l + r;
     }
-    // Fall back to double addition
-    return toDouble(left) + toDouble(right);
+    throw std::runtime_error("Cannot add incompatible types");
 }
 
 Interpreter::VarValue Interpreter::subtractValues(const VarValue& left, const VarValue& right) {
@@ -444,8 +456,20 @@ Interpreter::VarValue Interpreter::subtractValues(const VarValue& left, const Va
         int64_t r = std::get<int64_t>(right);
         return l - r;
     }
-    // Fall back to double subtraction
-    return toDouble(left) - toDouble(right);
+    // Try real subtraction
+    if (std::holds_alternative<double>(left) && std::holds_alternative<double>(right)) {
+        double l = std::get<double>(left);
+        double r = std::get<double>(right);
+        return l - r;
+    }
+    // Try mixed integer/real subtraction
+    if ((std::holds_alternative<int64_t>(left) && std::holds_alternative<double>(right)) ||
+        (std::holds_alternative<double>(left) && std::holds_alternative<int64_t>(right))) {
+        double l = toDouble(left);
+        double r = toDouble(right);
+        return l - r;
+    }
+    throw std::runtime_error("Cannot subtract incompatible types");
 }
 
 Interpreter::VarValue Interpreter::multiplyValues(const VarValue& left, const VarValue& right) {
@@ -455,8 +479,20 @@ Interpreter::VarValue Interpreter::multiplyValues(const VarValue& left, const Va
         int64_t r = std::get<int64_t>(right);
         return l * r;
     }
-    // Fall back to double multiplication
-    return toDouble(left) * toDouble(right);
+    // Try real multiplication
+    if (std::holds_alternative<double>(left) && std::holds_alternative<double>(right)) {
+        double l = std::get<double>(left);
+        double r = std::get<double>(right);
+        return l * r;
+    }
+    // Try mixed integer/real multiplication
+    if ((std::holds_alternative<int64_t>(left) && std::holds_alternative<double>(right)) ||
+        (std::holds_alternative<double>(left) && std::holds_alternative<int64_t>(right))) {
+        double l = toDouble(left);
+        double r = toDouble(right);
+        return l * r;
+    }
+    throw std::runtime_error("Cannot multiply incompatible types");
 }
 
 Interpreter::VarValue Interpreter::divideValues(const VarValue& left, const VarValue& right) {
