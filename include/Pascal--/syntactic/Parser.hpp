@@ -30,15 +30,12 @@ public:
     // Public interface
     const std::vector<Command>& getCommands() const { return m_commands; }
     const std::unordered_map<std::string, VariableInfo>& getVariableTypes() const { return m_variableTypes; }
-    const std::vector<std::string>& getTypeErrors() const { return m_typeErrors; }
-    bool hasTypeErrors() const { return !m_typeErrors.empty(); }
 
 private:
     std::vector<Lexeme>::const_iterator m_lexeme;
     std::vector<Command> m_commands;
     std::vector<std::string> m_expressionStack;
     std::unordered_map<std::string, VariableInfo> m_variableTypes;
-    std::vector<std::string> m_typeErrors;
     int m_tempCounter = 0;
     int m_labelCounter = 0;
 
@@ -63,14 +60,15 @@ private:
     bool isStringLiteral(const std::string& str);
 
     // Type checking methods
+    void validateExpr(const std::string& lhs, const std::string& rhs);
     void validateAssignment(const std::string& varName, const std::string& value);
-    bool isTypeCompatible(VarType expectedType, VarType actualType);
+    bool isTypeCompatible(VarType type1, VarType type2);
     VarType getValueType(const std::string& value);
     void addTypeError(const std::string& error);
     
     // Semantic analysis methods
     void validateComparison(const std::string& left, const std::string& right, const std::string& operator_);
-    void validateVariableExists(const std::string& varName);
+    bool varNameExists(const std::string& varName);
     Command::ReadType getReadTypeForVariable(const std::string& varName);
     bool areTypesComparable(VarType leftType, VarType rightType);
 

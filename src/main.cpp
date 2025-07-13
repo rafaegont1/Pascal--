@@ -36,31 +36,18 @@ int main(int argc, char* argv[]) {
     try {
         parser.start();
     } catch (const CompilerError& e) {
-        std::cerr << "Syntax Error at " << e.line() << ":" << e.column()
+        std::cerr << "Parser Error at " << e.line() << ":" << e.column()
             << ": " << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
 
 #ifdef VERBOSE
-    if (parser.hasTypeErrors()) {
-        std::cerr << "Type errors found during parsing, but continuing to show generated commands..." << std::endl;
-    } else {
-        std::cout << "No errors were found!" << std::endl;
-    }
-
     // Print variable types
     Printer::printVariableTypes(parser.getVariableTypes());
 
     // Print generated commands
     Printer::printCommands(parser.getCommands());
 #endif // VERBOSE
-
-    // Show type errors if any occurred
-    if (parser.hasTypeErrors()) {
-        Printer::printTypeErrors(parser.getTypeErrors());
-        std::cerr << "Execution skipped due to type errors." << std::endl;
-        exit(EXIT_FAILURE);
-    }
 
 #ifdef VERBOSE
     // Step 3: Execution using the simplified interpreter
