@@ -336,22 +336,30 @@ void Interpreter::executeIO(const Command& cmd) {
 
     switch (callType) {
         case Command::CallType::READ: {
-            switch (m_variableTypes[operand].type) {
-                case VarType::INTEGER: {
+            auto readType = std::get<Command::ReadType>(cmd.src2);
+            
+            switch (readType) {
+                case Command::ReadType::INTEGER: {
                     int64_t value;
-                    std::cin >> value;
+                    if (!(std::cin >> value)) {
+                        throw std::runtime_error("Expected integer input for variable '" + operand + "'");
+                    }
                     m_variables[operand] = value;
                     break;
                 }
-                case VarType::REAL: {
+                case Command::ReadType::REAL: {
                     double value;
-                    std::cin >> value;
+                    if (!(std::cin >> value)) {
+                        throw std::runtime_error("Expected real input for variable '" + operand + "'");
+                    }
                     m_variables[operand] = value;
                     break;
                 }
-                case VarType::STRING: {
+                case Command::ReadType::STRING: {
                     std::string value;
-                    std::cin >> value;
+                    if (!(std::cin >> value)) {
+                        throw std::runtime_error("Expected string input for variable '" + operand + "'");
+                    }
                     m_variables[operand] = value;
                     break;
                 }
@@ -368,22 +376,28 @@ void Interpreter::executeIO(const Command& cmd) {
             break;
         }
         case Command::CallType::READLN: {
-            switch (m_variableTypes[operand].type) {
-                case VarType::INTEGER: {
+            auto readType = std::get<Command::ReadType>(cmd.src2);
+            
+            switch (readType) {
+                case Command::ReadType::INTEGER: {
                     int64_t value;
-                    std::cin >> value;
+                    if (!(std::cin >> value)) {
+                        throw std::runtime_error("Runtime error: Expected integer input for variable '" + operand + "'");
+                    }
                     m_variables[operand] = value;
                     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                     break;
                 }
-                case VarType::REAL: {
+                case Command::ReadType::REAL: {
                     double value;
-                    std::cin >> value;
+                    if (!(std::cin >> value)) {
+                        throw std::runtime_error("Runtime error: Expected real input for variable '" + operand + "'");
+                    }
                     m_variables[operand] = value;
                     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                     break;
                 }
-                case VarType::STRING: {
+                case Command::ReadType::STRING: {
                     std::string value;
                     std::getline(std::cin, value);
                     m_variables[operand] = value;
@@ -535,7 +549,7 @@ bool Interpreter::compareGreaterEqual(const VarValue& left, const VarValue& righ
     if (std::holds_alternative<std::string>(left) && std::holds_alternative<std::string>(right)) {
         std::string l = std::get<std::string>(left);
         std::string r = std::get<std::string>(right);
-        return l <= r;
+        return l >= r;
     }
     // Fall back to double comparison
     return toDouble(left) >= toDouble(right);
@@ -624,3 +638,5 @@ void Interpreter::printState() const {
     }
     std::cout << std::endl;
 }
+
+

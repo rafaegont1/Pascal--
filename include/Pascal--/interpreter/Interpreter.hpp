@@ -69,6 +69,8 @@ private:
 
     // Simple utility methods
     void printValue(const VarValue& value) const;
+    
+
 };
 
 #endif // INTERPRETER_HPP

@@ -353,7 +353,13 @@ void Parser::proc_ioStmt() {
             consume(TT_IDENT);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
-            addCommand(Command::Mnemonic::CALL, Command::CallType::READ, readVar, Command::ReadType::INTEGER);
+            
+            // Verificação semântica: variável deve estar declarada
+            validateVariableExists(readVar);
+            
+            // Determinar o tipo correto baseado na declaração da variável
+            Command::ReadType readType = getReadTypeForVariable(readVar);
+            addCommand(Command::Mnemonic::CALL, Command::CallType::READ, readVar, readType);
             break;
         }
         case TT_WRITE: {
@@ -371,7 +377,13 @@ void Parser::proc_ioStmt() {
             consume(TT_IDENT);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
-            addCommand(Command::Mnemonic::CALL, Command::CallType::READLN, readlnVar, Command::ReadType::STRING);
+            
+            // Verificação semântica: variável deve estar declarada
+            validateVariableExists(readlnVar);
+            
+            // Determinar o tipo correto baseado na declaração da variável
+            Command::ReadType readType = getReadTypeForVariable(readlnVar);
+            addCommand(Command::Mnemonic::CALL, Command::CallType::READLN, readlnVar, readType);
             break;
         }
         case TT_WRITELN: {
@@ -562,7 +574,8 @@ void Parser::proc_atrib() {
     proc_expr();
     std::string value = popExpression();
 
-    // Simple validation
+    // Validate variable exists and assignment types
+    validateVariableExists(varName);
     validateAssignment(varName, value);
 
     addCommand(Command::Mnemonic::ASSIGN, varName, value);
@@ -643,6 +656,10 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            
+            // Verificação semântica: tipos devem ser compatíveis para comparação
+            validateComparison(left, right, "=");
+            
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::EQL, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -653,6 +670,10 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            
+            // Verificação semântica: tipos devem ser compatíveis para comparação
+            validateComparison(left, right, "<>");
+            
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::NEQ, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -663,6 +684,10 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            
+            // Verificação semântica: tipos devem ser compatíveis para comparação
+            validateComparison(left, right, "<");
+            
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::LSS, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -673,6 +698,10 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            
+            // Verificação semântica: tipos devem ser compatíveis para comparação
+            validateComparison(left, right, "<=");
+            
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::LEQ, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -683,6 +712,10 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            
+            // Verificação semântica: tipos devem ser compatíveis para comparação
+            validateComparison(left, right, ">");
+            
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::GTR, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -693,6 +726,10 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            
+            // Verificação semântica: tipos devem ser compatíveis para comparação
+            validateComparison(left, right, ">=");
+            
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::GEQ, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -1027,4 +1064,60 @@ void Parser::incrementFor(
 ) {
     addCommand(Command::Mnemonic::ADD, "TEMP:" + incTemp, loopVar, "1");
     addCommand(Command::Mnemonic::ASSIGN, loopVar, "TEMP:" + incTemp);
+}
+
+// Semantic analysis methods
+void Parser::validateComparison(const std::string& left, const std::string& right, const std::string& operator_) {
+    VarType leftType = getValueType(left);
+    VarType rightType = getValueType(right);
+    
+    if (!areTypesComparable(leftType, rightType)) {
+        addTypeError(
+            "Semantic error: Cannot compare " + Printer::varTypeToString(leftType) + 
+            " with " + Printer::varTypeToString(rightType) + " using operator '" + operator_ + "'"
+        );
+    }
+}
+
+void Parser::validateVariableExists(const std::string& varName) {
+    auto it = m_variableTypes.find(varName);
+    if (it == m_variableTypes.end()) {
+        addTypeError("Semantic error: Variable '" + varName + "' is not declared");
+    }
+}
+
+Command::ReadType Parser::getReadTypeForVariable(const std::string& varName) {
+    auto it = m_variableTypes.find(varName);
+    if (it != m_variableTypes.end()) {
+        switch (it->second.type) {
+            case VarType::INTEGER:
+                return Command::ReadType::INTEGER;
+            case VarType::REAL:
+                return Command::ReadType::REAL;
+            case VarType::STRING:
+                return Command::ReadType::STRING;
+        }
+    }
+    // Fallback para string se variável não encontrada
+    return Command::ReadType::STRING;
+}
+
+bool Parser::areTypesComparable(VarType leftType, VarType rightType) {
+    // Tipos iguais são sempre comparáveis
+    if (leftType == rightType) {
+        return true;
+    }
+    
+    // Integer e Real são comparáveis entre si
+    if ((leftType == VarType::INTEGER || leftType == VarType::REAL) &&
+        (rightType == VarType::INTEGER || rightType == VarType::REAL)) {
+        return true;
+    }
+    
+    // String só é comparável com String
+    if (leftType == VarType::STRING || rightType == VarType::STRING) {
+        return leftType == VarType::STRING && rightType == VarType::STRING;
+    }
+    
+    return false;
 }

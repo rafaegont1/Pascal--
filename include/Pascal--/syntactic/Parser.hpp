@@ -67,6 +67,12 @@ private:
     bool isTypeCompatible(VarType expectedType, VarType actualType);
     VarType getValueType(const std::string& value);
     void addTypeError(const std::string& error);
+    
+    // Semantic analysis methods
+    void validateComparison(const std::string& left, const std::string& right, const std::string& operator_);
+    void validateVariableExists(const std::string& varName);
+    Command::ReadType getReadTypeForVariable(const std::string& varName);
+    bool areTypesComparable(VarType leftType, VarType rightType);
 
     void incrementFor(const std::string& loopVar, const std::string& incTemp);
 
