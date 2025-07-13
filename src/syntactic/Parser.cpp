@@ -601,6 +601,7 @@ void Parser::proc_restoOr() {
         proc_restoOr();
         std::string right = popExpression();
         std::string left = popExpression();
+        validateExpr(left, right);
         std::string temp = generateTemp();
         addCommand(Command::Mnemonic::OR, "TEMP:" + temp, left, right);
         pushExpression("TEMP:" + temp);
@@ -621,6 +622,7 @@ void Parser::proc_restoAnd() {
         proc_restoAnd();
         std::string right = popExpression();
         std::string left = popExpression();
+        validateExpr(left, right);
         std::string temp = generateTemp();
         addCommand(Command::Mnemonic::AND, "TEMP:" + temp, left, right);
         pushExpression("TEMP:" + temp);
@@ -765,6 +767,7 @@ void Parser::proc_restoAdd() {
             proc_restoAdd();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::ADD, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -776,6 +779,7 @@ void Parser::proc_restoAdd() {
             proc_restoAdd();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::SUB, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -804,6 +808,7 @@ void Parser::proc_restoMult() {
             proc_restoMult();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::MUL, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -815,6 +820,7 @@ void Parser::proc_restoMult() {
             proc_restoMult();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::DIV, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -826,6 +832,7 @@ void Parser::proc_restoMult() {
             proc_restoMult();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::MOD, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -837,6 +844,7 @@ void Parser::proc_restoMult() {
             proc_restoMult();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::IDIV, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -1010,6 +1018,31 @@ bool Parser::isStringLiteral(const std::string& str) {
     return str.length() >= 2 && str[0] == '"' && str[str.length() - 1] == '"';
 }
 
+void Parser::validateExpr(const std::string& lhs, const std::string& rhs) {
+    VarType lhsType = getValueType(lhs);
+    VarType rhsType = getValueType(rhs);
+
+    if (!isTypeCompatible(lhsType, rhsType)) {
+        throw CompilerError("incompatible types in expression",
+            m_lexeme->line, m_lexeme->column);
+    }
+}
+
+bool Parser::isTypeCompatible(VarType type1, VarType type2) {
+    // Direct type matches
+    if (type1 == type2) {
+        return true;
+    }
+
+    // Type promotions for arithmetic operations
+    if ((type1 == VarType::REAL || type1 == VarType::INTEGER)
+     && (type2 == VarType::REAL || type2 == VarType::INTEGER)) {
+        return true; // Integer can be promoted to real and vice versa
+    }
+
+    return false;
+}
+
 void Parser::validateAssignment(const std::string& varName, const std::string& value) {
     auto it = m_variableTypes.find(varName);
     if (it != m_variableTypes.end()) {
@@ -1021,13 +1054,7 @@ void Parser::validateAssignment(const std::string& varName, const std::string& v
             return; 
         }
 
-        if (expectedType != actualType) {
-            // Allow integer to real conversion
-            if ((expectedType == VarType::REAL && actualType == VarType::INTEGER) ||
-                (expectedType == VarType::INTEGER && actualType == VarType::REAL)) {
-                return; 
-            }
-            
+        if (!isTypeCompatible(expectedType, actualType)) {
             throw CompilerError(
                 "cannot assign " + Printer::varTypeToString(actualType) +
                 " to variable '" + varName + "' of type " +
@@ -1041,8 +1068,6 @@ void Parser::validateAssignment(const std::string& varName, const std::string& v
             m_lexeme->line, m_lexeme->column);
     }
 }
-
-
 
 VarType Parser::getValueType(const std::string& value) {
     if (isIntegerLiteral(value)) {
@@ -1074,7 +1099,7 @@ void Parser::validateComparison(const std::string& left, const std::string& righ
     VarType leftType = getValueType(left);
     VarType rightType = getValueType(right);
     
-    if (!areTypesComparable(leftType, rightType)) {
+    if (!isTypeCompatible(leftType, rightType)) {
         throw CompilerError(
             "Semantic error: Cannot compare " + Printer::varTypeToString(leftType) + 
             " with " + Printer::varTypeToString(rightType) + " using operator '" + operator_ + "'",
@@ -1108,24 +1133,6 @@ Command::ReadType Parser::getReadTypeForVariable(const std::string& varName) {
     return Command::ReadType::STRING;
 }
 
-bool Parser::areTypesComparable(VarType leftType, VarType rightType) {
-    // Tipos iguais são sempre comparáveis
-    if (leftType == rightType) {
-        return true;
-    }
-    
-    // Integer e Real são comparáveis entre si
-    if ((leftType == VarType::INTEGER || leftType == VarType::REAL) &&
-        (rightType == VarType::INTEGER || rightType == VarType::REAL)) {
-        return true;
-    }
-    
-    // String só é comparável com String
-    if (leftType == VarType::STRING || rightType == VarType::STRING) {
-        return leftType == VarType::STRING && rightType == VarType::STRING;
-    }
-    
-    return false;
-}
+
 
 

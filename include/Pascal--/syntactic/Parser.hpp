@@ -60,14 +60,15 @@ private:
     bool isStringLiteral(const std::string& str);
 
     // Type checking methods
+    void validateExpr(const std::string& lhs, const std::string& rhs);
     void validateAssignment(const std::string& varName, const std::string& value);
+    bool isTypeCompatible(VarType type1, VarType type2);
     VarType getValueType(const std::string& value);
     
     // Semantic analysis methods
     void validateComparison(const std::string& left, const std::string& right, const std::string& operator_);
     bool varNameExists(const std::string& varName);
     Command::ReadType getReadTypeForVariable(const std::string& varName);
-    bool areTypesComparable(VarType leftType, VarType rightType);
 
     void incrementFor(const std::string& loopVar, const std::string& incTemp);
 
