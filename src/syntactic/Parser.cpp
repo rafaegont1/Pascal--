@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cctype>
 #include <stdexcept>
+#include <algorithm>
 
 Parser::Parser(const std::vector<Lexeme>& lexemes) : m_lexeme(lexemes.begin()) {
 }
@@ -85,6 +86,11 @@ void Parser::proc_declaration() {
 // <listIdent> -> 'IDENT' <restIdentList> ;
 void Parser::proc_listIdent(std::vector<std::string>& varNames) {
     std::string varName = m_lexeme->token;
+    if (std::find(varNames.cbegin(), varNames.cend(), varName) != varNames.cend()
+    || m_variableTypes.find(varName) != m_variableTypes.end()) {
+        throw CompilerError("Variável '" + varName + "' já foi declarada",
+            m_lexeme->line, m_lexeme->column);
+    }
     consume(TT_IDENT);
     varNames.push_back(varName);
     proc_restIdentList(varNames);
@@ -95,6 +101,11 @@ void Parser::proc_restIdentList(std::vector<std::string>& varNames) {
     if (m_lexeme->type == TT_COMMA) {
         consume(TT_COMMA);
         std::string varName = m_lexeme->token;
+        if (std::find(varNames.cbegin(), varNames.cend(), varName) != varNames.cend()
+        || m_variableTypes.find(varName) != m_variableTypes.end()) {
+            throw CompilerError("Variável '" + varName + "' já foi declarada",
+                m_lexeme->line, m_lexeme->column);
+        }
         consume(TT_IDENT);
         varNames.push_back(varName);
         proc_restIdentList(varNames);
@@ -587,6 +598,7 @@ void Parser::proc_restoOr() {
         proc_restoOr();
         std::string right = popExpression();
         std::string left = popExpression();
+        validateExpr(left, right);
         std::string temp = generateTemp();
         addCommand(Command::Mnemonic::OR, "TEMP:" + temp, left, right);
         pushExpression("TEMP:" + temp);
@@ -607,6 +619,7 @@ void Parser::proc_restoAnd() {
         proc_restoAnd();
         std::string right = popExpression();
         std::string left = popExpression();
+        validateExpr(left, right);
         std::string temp = generateTemp();
         addCommand(Command::Mnemonic::AND, "TEMP:" + temp, left, right);
         pushExpression("TEMP:" + temp);
@@ -619,6 +632,14 @@ void Parser::proc_not() {
         consume(TT_NOT);
         proc_not();
         std::string operand = popExpression();
+
+        // NOTE: eu não tenho certeza se esse o operador `not` funcionaria
+        // apenas em comparações, ou se poderia existir `not INTEGER/REAL`
+        if (operand.substr(0, 5) == "TEMP:") {
+            throw CompilerError("'not' operator only works on integers",
+                m_lexeme->line, m_lexeme->column);
+        }
+
         std::string temp = generateTemp();
         addCommand(Command::Mnemonic::NOT, "TEMP:" + temp, operand);
         pushExpression("TEMP:" + temp);
@@ -643,6 +664,7 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::EQL, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -653,6 +675,7 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::NEQ, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -663,6 +686,7 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::LSS, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -673,6 +697,7 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::LEQ, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -683,6 +708,7 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::GTR, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -693,6 +719,7 @@ void Parser::proc_restoRel() {
             proc_add();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::GEQ, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -719,6 +746,7 @@ void Parser::proc_restoAdd() {
             proc_restoAdd();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::ADD, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -730,6 +758,7 @@ void Parser::proc_restoAdd() {
             proc_restoAdd();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::SUB, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -758,6 +787,7 @@ void Parser::proc_restoMult() {
             proc_restoMult();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::MUL, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -769,6 +799,7 @@ void Parser::proc_restoMult() {
             proc_restoMult();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::DIV, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -780,6 +811,7 @@ void Parser::proc_restoMult() {
             proc_restoMult();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::MOD, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -791,6 +823,7 @@ void Parser::proc_restoMult() {
             proc_restoMult();
             std::string right = popExpression();
             std::string left = popExpression();
+            validateExpr(left, right);
             std::string temp = generateTemp();
             addCommand(Command::Mnemonic::IDIV, "TEMP:" + temp, left, right);
             pushExpression("TEMP:" + temp);
@@ -835,6 +868,10 @@ void Parser::proc_fator() {
         }
         case TT_IDENT: {
             std::string value = m_lexeme->token;
+            if (m_variableTypes.find(value) == m_variableTypes.end()) {
+                throw CompilerError("tried to acces undeclared variable '"
+                    + value + "'", m_lexeme->line, m_lexeme->column);
+            }
             pushExpression(value);
             consume(TT_IDENT);
             break;
@@ -960,9 +997,14 @@ bool Parser::isStringLiteral(const std::string& str) {
     return str.length() >= 2 && str[0] == '"' && str[str.length() - 1] == '"';
 }
 
-// Type checking methods
-void Parser::addTypeError(const std::string& error) {
-    m_typeErrors.push_back(error);
+void Parser::validateExpr(const std::string& lhs, const std::string& rhs) {
+    VarType lhsType = getValueType(lhs);
+    VarType rhsType = getValueType(rhs);
+
+    if (!isTypeCompatible(lhsType, rhsType)) {
+        throw CompilerError("incompatible types in expression",
+            m_lexeme->line, m_lexeme->column);
+    }
 }
 
 void Parser::validateAssignment(const std::string& varName, const std::string& value) {
@@ -977,27 +1019,29 @@ void Parser::validateAssignment(const std::string& varName, const std::string& v
         }
 
         if (!isTypeCompatible(expectedType, actualType)) {
-            addTypeError(
-                "Type error: Cannot assign "
-                + Printer::varTypeToString(actualType) + " to variable '"
-                + varName + "' of type" + Printer::varTypeToString(expectedType)
+            throw CompilerError(
+                "cannot assign " + Printer::varTypeToString(actualType) +
+                " to variable '" + varName + "' of type" +
+                Printer::varTypeToString(expectedType),
+                m_lexeme->line, m_lexeme->column
             );
         }
     } else {
         // Variable not declared - could add warning here
-        addTypeError("Warning: Variable '" + varName + "' not declared");
+        throw CompilerError("Warning: Variable '" + varName + "' not declared",
+            m_lexeme->line, m_lexeme->column);
     }
 }
 
-bool Parser::isTypeCompatible(VarType expectedType, VarType actualType) {
+bool Parser::isTypeCompatible(VarType type1, VarType type2) {
     // Direct type matches
-    if (expectedType == actualType) {
+    if (type1 == type2) {
         return true;
     }
 
     // Type promotions
-    if ((expectedType == VarType::REAL || expectedType == VarType::INTEGER)
-        || (actualType == VarType::REAL || actualType == VarType::INTEGER)) {
+    if ((type1 == VarType::REAL || type1 == VarType::INTEGER)
+     && (type2 == VarType::REAL || type2 == VarType::INTEGER)) {
         return true; // Integer can be promoted to real and vice versa
     }
 
