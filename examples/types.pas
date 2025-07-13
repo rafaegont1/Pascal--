@@ -4,6 +4,10 @@ var
   r: real;
   s: string;
 begin
+  i := 1;
+  r := 1.0;
+  s := "a";
+
   i := 1 + 1.0;
   // i := 1 + "str";
   // i := 1.0 + "str";
@@ -32,6 +36,9 @@ begin
   // s := i + s;
   // s := r + r;
   // s := r + s;
-  // s := s + s;
+  s := s + s;
 
+  writeln(i);
+  writeln(r);
+  writeln(s);
 end.

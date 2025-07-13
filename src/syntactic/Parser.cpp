@@ -228,36 +228,26 @@ void Parser::proc_stmt(
             break;
 
         case TT_BREAK:
-            consume(TT_BREAK);
-            consume(TT_SEMICOLON);
             if (endLabel.empty()) {
                 throw CompilerError("break keyword outside loop",
                     m_lexeme->line, m_lexeme->column);
             }
+            consume(TT_BREAK);
+            consume(TT_SEMICOLON);
             addCommand(Command::Mnemonic::JMP, endLabel);
-            // if (m_loopStartLabels.empty()) {
-            //     throw CompilerError("break keyword outside loop",
-            //         m_lexeme->line, m_lexeme->column);
-            // }
-            // addCommand(Command::Mnemonic::JMP, m_loopEndLabels.top());
             break;
 
         case TT_CONTINUE:
-            consume(TT_CONTINUE);
-            consume(TT_SEMICOLON);
             if (startLabel.empty()) {
                 throw CompilerError("continue keyword outside loop",
                     m_lexeme->line, m_lexeme->column);
             }
+            consume(TT_CONTINUE);
+            consume(TT_SEMICOLON);
             if (!loopVar.empty()) {
                 incrementFor(loopVar, incTemp);
             }
             addCommand(Command::Mnemonic::JMP, startLabel);
-            // if (m_loopStartLabels.empty()) {
-            //     throw CompilerError("continue keyword outside loop",
-            //         m_lexeme->line, m_lexeme->column);
-            // }
-            // addCommand(Command::Mnemonic::JMP, m_loopStartLabels.top());
             break;
 
         case TT_SEMICOLON:
