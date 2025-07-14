@@ -351,13 +351,11 @@ void Parser::proc_ioStmt() {
             consume(TT_READ);
             consume(TT_LPAREN);
             std::string readVar = m_lexeme->token;
+            validateVarNameExists(readVar);
             consume(TT_IDENT);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
-            
-            // Verificação semântica: variável deve estar declarada
-            varNameExists(readVar);
-            
+
             // Determinar o tipo correto baseado na declaração da variável
             Command::ReadType readType = getReadTypeForVariable(readVar);
             addCommand(Command::Mnemonic::CALL, Command::CallType::READ, readVar, readType);
@@ -375,13 +373,11 @@ void Parser::proc_ioStmt() {
             consume(TT_READLN);
             consume(TT_LPAREN);
             std::string readlnVar = m_lexeme->token;
+            validateVarNameExists(readlnVar);
             consume(TT_IDENT);
             consume(TT_RPAREN);
             consume(TT_SEMICOLON);
-            
-            // Verificação semântica: variável deve estar declarada
-            varNameExists(readlnVar);
-            
+
             // Determinar o tipo correto baseado na declaração da variável
             Command::ReadType readType = getReadTypeForVariable(readlnVar);
             addCommand(Command::Mnemonic::CALL, Command::CallType::READLN, readlnVar, readType);
@@ -453,6 +449,7 @@ void Parser::proc_out(WriteNewLine new_line) {
         }
         case TT_IDENT: {
             std::string value = m_lexeme->token;
+            validateVarNameExists(value);
             consume(TT_IDENT);
             addCommand(Command::Mnemonic::CALL, callType, value, Command::WriteType::VARIABLE);
             break;
@@ -576,7 +573,7 @@ void Parser::proc_atrib() {
     std::string value = popExpression();
 
     // Validate variable exists and assignment types
-    varNameExists(varName);
+    validateVarNameExists(varName);
     validateAssignment(varName, value);
 
     addCommand(Command::Mnemonic::ASSIGN, varName, value);
@@ -639,7 +636,7 @@ void Parser::proc_not() {
         // NOTE: eu não tenho certeza se esse o operador `not` funcionaria
         // apenas em comparações, ou se poderia existir `not INTEGER/REAL`
         if (operand.substr(0, 5) == "TEMP:") {
-            throw CompilerError("'not' operator only works on integers",
+            throw CompilerError("'not' operator only works with comparisons",
                 m_lexeme->line, m_lexeme->column);
         }
 
@@ -889,10 +886,7 @@ void Parser::proc_fator() {
         }
         case TT_IDENT: {
             std::string value = m_lexeme->token;
-            if (m_variableTypes.find(value) == m_variableTypes.end()) {
-                throw CompilerError("tried to acces undeclared variable '"
-                    + value + "'", m_lexeme->line, m_lexeme->column);
-            }
+            validateVarNameExists(value);
             pushExpression(value);
             consume(TT_IDENT);
             break;
@@ -1101,20 +1095,18 @@ void Parser::validateComparison(const std::string& left, const std::string& righ
     
     if (!isTypeCompatible(leftType, rightType)) {
         throw CompilerError(
-            "Semantic error: Cannot compare " + Printer::varTypeToString(leftType) + 
+            "cannot compare " + Printer::varTypeToString(leftType) + 
             " with " + Printer::varTypeToString(rightType) + " using operator '" + operator_ + "'",
             m_lexeme->line, m_lexeme->column
         );
     }
 }
 
-bool Parser::varNameExists(const std::string& varName) {
-    auto it = m_variableTypes.find(varName);
-    if (it == m_variableTypes.end()) {
-        throw CompilerError("Semantic error: Variable '" + varName + "' is not declared",
+void Parser::validateVarNameExists(const std::string& varName) {
+    if (m_variableTypes.find(varName) == m_variableTypes.end()) {
+        throw CompilerError("variable '" + varName + "' is not declared",
             m_lexeme->line, m_lexeme->column);
     }
-    return true;
 }
 
 Command::ReadType Parser::getReadTypeForVariable(const std::string& varName) {
@@ -1132,7 +1124,3 @@ Command::ReadType Parser::getReadTypeForVariable(const std::string& varName) {
     // Fallback para string se variável não encontrada
     return Command::ReadType::STRING;
 }
-
-
-
-

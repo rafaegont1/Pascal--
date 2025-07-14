@@ -67,7 +67,7 @@ private:
     
     // Semantic analysis methods
     void validateComparison(const std::string& left, const std::string& right, const std::string& operator_);
-    bool varNameExists(const std::string& varName);
+    void validateVarNameExists(const std::string& varName);
     Command::ReadType getReadTypeForVariable(const std::string& varName);
 
     void incrementFor(const std::string& loopVar, const std::string& incTemp);

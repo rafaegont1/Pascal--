@@ -674,5 +674,3 @@ void Interpreter::printState() const {
     }
     std::cout << std::endl;
 }
-
-
