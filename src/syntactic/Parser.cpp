@@ -633,13 +633,6 @@ void Parser::proc_not() {
         proc_not();
         std::string operand = popExpression();
 
-        // NOTE: eu não tenho certeza se esse o operador `not` funcionaria
-        // apenas em comparações, ou se poderia existir `not INTEGER/REAL`
-        if (operand.substr(0, 5) == "TEMP:") {
-            throw CompilerError("'not' operator only works with comparisons",
-                m_lexeme->line, m_lexeme->column);
-        }
-
         std::string temp = generateTemp();
         addCommand(Command::Mnemonic::NOT, "TEMP:" + temp, operand);
         pushExpression("TEMP:" + temp);
